@@ -1,0 +1,191 @@
+weather_data_schema = {
+    'temporal_variables': {
+        'date': {
+            'dtype': 'datetime64[ns]',
+            'format': 'YYYY-MM-DD',
+            'frequency': 'daily',
+            'missing_policy': 'interpolate',
+            'validation': 'date_sequence_check'
+        },
+        'time': {
+            'dtype': 'time',
+            'format': 'HH:MM:SS',
+            'frequency': 'hourly',
+            'timezone': 'Africa/Douala'
+        }
+    },
+    'temperature_variables': {
+        'temperature_min': {
+            'dtype': 'float32',
+            'units': 'degree_celsius',
+            'valid_range': [-5, 45],
+            'precision': 0.1,
+            'cf_standard_name': 'air_temperature_minimum',
+            'measurement_height': '2m'
+        },
+        'temperature_max': {
+            'dtype': 'float32',
+            'units': 'degree_celsius',
+            'valid_range': [10, 50],
+            'precision': 0.1,
+            'cf_standard_name': 'air_temperature_maximum',
+            'measurement_height': '2m'
+        },
+        'temperature_avg': {
+            'dtype': 'float32',
+            'units': 'degree_celsius',
+            'valid_range': [5, 40],
+            'derived_from': ['temperature_min', 'temperature_max'],
+            'calculation': 'mean'
+        },
+        'soil_temperature': {
+            'dtype': 'float32',
+            'units': 'degree_celsius',
+            'valid_range': [10, 45],
+            'measurement_depth': ['5cm', '10cm', '20cm', '50cm'],
+            'cf_standard_name': 'soil_temperature'
+        },
+        'dew_point': {
+            'dtype': 'float32',
+            'units': 'degree_celsius',
+            'valid_range': [-10, 35],
+            'cf_standard_name': 'dew_point_temperature'
+        }
+    },
+    'precipitation_variables': {
+        'precipitation_daily': {
+            'dtype': 'float32',
+            'units': 'mm',
+            'valid_range': [0, 500],
+            'precision': 0.1,
+            'cf_standard_name': 'precipitation_amount',
+            'accumulation_period': '24h'
+        },
+        'precipitation_intensity': {
+            'dtype': 'float32',
+            'units': 'mm/hour',
+            'valid_range': [0, 100],
+            'measurement_interval': '1_minute'
+        },
+        'precipitation_type': {
+            'dtype': 'category',
+            'categories': ['rain', 'drizzle', 'shower', 'thunderstorm'],
+            'encoding': 'one_hot'
+        }
+    },
+    'humidity_variables': {
+        'relative_humidity': {
+            'dtype': 'float32',
+            'units': 'percent',
+            'valid_range': [0, 100],
+            'precision': 1,
+            'cf_standard_name': 'relative_humidity',
+            'measurement_height': '2m'
+        },
+        'specific_humidity': {
+            'dtype': 'float32',
+            'units': 'g/kg',
+            'valid_range': [0, 30],
+            'cf_standard_name': 'specific_humidity'
+        },
+        'vapor_pressure': {
+            'dtype': 'float32',
+            'units': 'hPa',
+            'valid_range': [5, 50],
+            'cf_standard_name': 'water_vapor_pressure'
+        }
+    },
+    'radiation_variables': {
+        'solar_radiation': {
+            'dtype': 'float32',
+            'units': 'MJ/m2/day',
+            'valid_range': [0, 35],
+            'cf_standard_name': 'surface_downwelling_shortwave_flux',
+            'measurement_type': 'global_horizontal'
+        },
+        'sunshine_hours': {
+            'dtype': 'float32',
+            'units': 'hours',
+            'valid_range': [0, 14],
+            'cf_standard_name': 'duration_of_sunshine'
+        },
+        'uv_index': {
+            'dtype': 'float32',
+            'units': '1',
+            'valid_range': [0, 15],
+            'measurement_peak': 'solar_noon'
+        },
+        'net_radiation': {
+            'dtype': 'float32',
+            'units': 'MJ/m2/day',
+            'valid_range': [-5, 25],
+            'calculation': 'incoming_minus_outgoing'
+        }
+    },
+    'wind_variables': {
+        'wind_speed': {
+            'dtype': 'float32',
+            'units': 'm/s',
+            'valid_range': [0, 50],
+            'precision': 0.1,
+            'measurement_height': '10m',
+            'cf_standard_name': 'wind_speed'
+        },
+        'wind_direction': {
+            'dtype': 'float32',
+            'units': 'degrees',
+            'valid_range': [0, 360],
+            'reference': 'north_clockwise',
+            'cf_standard_name': 'wind_from_direction'
+        },
+        'wind_gust': {
+            'dtype': 'float32',
+            'units': 'm/s',
+            'valid_range': [0, 100],
+            'measurement_period': 'maximum_3_second'
+        }
+    },
+    'pressure_variables': {
+        'atmospheric_pressure': {
+            'dtype': 'float32',
+            'units': 'hPa',
+            'valid_range': [980, 1040],
+            'precision': 0.1,
+            'cf_standard_name': 'air_pressure'
+        },
+        'sea_level_pressure': {
+            'dtype': 'float32',
+            'units': 'hPa',
+            'valid_range': [990, 1035],
+            'reduction_method': 'standard_atmosphere'
+        }
+    },
+    'derived_indices': {
+        'growing_degree_days': {
+            'dtype': 'float32',
+            'units': 'degree_days',
+            'base_temperature': 'crop_specific',
+            'calculation': 'max(0, (temp_min + temp_max)/2 - base_temp)',
+            'cumulative': True
+        },
+        'evapotranspiration': {
+            'dtype': 'float32',
+            'units': 'mm/day',
+            'method': 'penman_monteith',
+            'reference_crop': 'grass',
+            'cf_standard_name': 'water_evapotranspiration_flux'
+        },
+        'vapor_pressure_deficit': {
+            'dtype': 'float32',
+            'units': 'kPa',
+            'calculation': 'saturation_vapor_pressure - actual_vapor_pressure',
+            'importance': 'plant_stress_indicator'
+        },
+        'heat_index': {
+            'dtype': 'float32',
+            'units': 'degree_celsius',
+            'calculation': 'temperature_humidity_combination',
+            'threshold_stress': 32
+        }
+    }
+}

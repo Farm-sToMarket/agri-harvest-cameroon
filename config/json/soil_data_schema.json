@@ -1,0 +1,247 @@
+soil_data_schema = {
+    'physical_properties': {
+        'texture': {
+            'sand_percentage': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'size_range': '0.05-2.0_mm',
+                'measurement_method': 'sieve_analysis'
+            },
+            'silt_percentage': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'size_range': '0.002-0.05_mm',
+                'measurement_method': 'hydrometer'
+            },
+            'clay_percentage': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'size_range': '<0.002_mm',
+                'constraint': 'sand + silt + clay = 100'
+            },
+            'texture_class': {
+                'dtype': 'category',
+                'categories': [
+                    'sand', 'loamy_sand', 'sandy_loam', 'loam',
+                    'silt_loam', 'silt', 'sandy_clay_loam',
+                    'clay_loam', 'silty_clay_loam', 'sandy_clay',
+                    'silty_clay', 'clay'
+                ],
+                'classification_system': 'USDA'
+            }
+        },
+        'structure': {
+            'bulk_density': {
+                'dtype': 'float32',
+                'units': 'g/cm3',
+                'valid_range': [0.8, 2.0],
+                'measurement_depth': ['0-10cm', '10-20cm', '20-30cm'],
+                'significance': 'compaction_indicator'
+            },
+            'porosity': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [20, 70],
+                'calculation': '(1 - bulk_density/particle_density) * 100'
+            },
+            'aggregate_stability': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'measurement_method': 'wet_sieving',
+                'size_class': '>0.25mm'
+            }
+        },
+        'water_properties': {
+            'field_capacity': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [5, 60],
+                'pressure': '-33_kPa',
+                'cf_standard_name': 'soil_moisture_content_at_field_capacity'
+            },
+            'wilting_point': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [2, 40],
+                'pressure': '-1500_kPa',
+                'cf_standard_name': 'soil_moisture_content_at_wilting_point'
+            },
+            'available_water_capacity': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'calculation': 'field_capacity - wilting_point',
+                'significance': 'plant_available_water'
+            },
+            'saturated_hydraulic_conductivity': {
+                'dtype': 'float32',
+                'units': 'cm/hour',
+                'valid_range': [0.01, 100],
+                'measurement_method': 'constant_head_permeameter'
+            },
+            'infiltration_rate': {
+                'dtype': 'float32',
+                'units': 'mm/hour',
+                'valid_range': [1, 300],
+                'measurement_method': 'double_ring_infiltrometer'
+            }
+        }
+    },
+    'chemical_properties': {
+        'ph_measurements': {
+            'ph_water': {
+                'dtype': 'float32',
+                'units': '1',
+                'valid_range': [3.5, 9.5],
+                'method': 'water_1:2.5_ratio',
+                'standard': 'ISO_10390'
+            },
+            'ph_kcl': {
+                'dtype': 'float32',
+                'units': '1',
+                'valid_range': [3.0, 8.5],
+                'method': 'kcl_1M_1:2.5_ratio',
+                'significance': 'exchangeable_acidity'
+            },
+            'ph_buffer_capacity': {
+                'dtype': 'float32',
+                'units': 'cmol/kg/pH_unit',
+                'measurement_method': 'lime_requirement_test'
+            }
+        },
+        'organic_matter': {
+            'organic_carbon': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0.1, 10.0],
+                'measurement_method': 'walkley_black',
+                'cf_standard_name': 'soil_carbon_content'
+            },
+            'organic_matter': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0.2, 15.0],
+                'calculation': 'organic_carbon * 1.724',
+                'significance': 'soil_fertility_indicator'
+            },
+            'total_nitrogen': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0.01, 1.0],
+                'measurement_method': 'kjeldahl',
+                'cf_standard_name': 'soil_nitrogen_content'
+            },
+            'c_n_ratio': {
+                'dtype': 'float32',
+                'units': '1',
+                'valid_range': [5, 50],
+                'calculation': 'organic_carbon / total_nitrogen',
+                'optimal_range': [8, 15]
+            }
+        },
+        'nutrients': {
+            'available_nitrogen': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [5, 200],
+                'forms': ['nitrate', 'ammonium'],
+                'extraction_method': 'kcl_extraction'
+            },
+            'available_phosphorus': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [1, 150],
+                'extraction_method': 'bray_p1',
+                'critical_level': {'low': '<10', 'medium': '10-25', 'high': '>25'}
+            },
+            'exchangeable_potassium': {
+                'dtype': 'float32',
+                'units': 'cmol/kg',
+                'valid_range': [0.1, 3.0],
+                'extraction_method': 'ammonium_acetate',
+                'critical_level': {'low': '<0.15', 'medium': '0.15-0.30', 'high': '>0.30'}
+            },
+            'exchangeable_calcium': {
+                'dtype': 'float32',
+                'units': 'cmol/kg',
+                'valid_range': [0.5, 25.0],
+                'extraction_method': 'ammonium_acetate'
+            },
+            'exchangeable_magnesium': {
+                'dtype': 'float32',
+                'units': 'cmol/kg',
+                'valid_range': [0.1, 8.0],
+                'extraction_method': 'ammonium_acetate'
+            },
+            'available_sulfur': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [2, 50],
+                'extraction_method': 'calcium_phosphate'
+            }
+        },
+        'exchange_properties': {
+            'cation_exchange_capacity': {
+                'dtype': 'float32',
+                'units': 'cmol/kg',
+                'valid_range': [2, 60],
+                'measurement_method': 'ammonium_acetate_ph7',
+                'significance': 'nutrient_holding_capacity'
+            },
+            'base_saturation': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [10, 100],
+                'calculation': '(Ca + Mg + K + Na) / CEC * 100',
+                'fertility_indicator': True
+            },
+            'aluminum_saturation': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 80],
+                'toxicity_threshold': 20,
+                'measurement_method': 'kcl_extraction'
+            }
+        },
+        'micronutrients': {
+            'available_iron': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [1, 100],
+                'extraction_method': 'dtpa',
+                'deficiency_threshold': 4.5
+            },
+            'available_manganese': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [0.5, 50],
+                'extraction_method': 'dtpa',
+                'deficiency_threshold': 1.0
+            },
+            'available_zinc': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [0.1, 20],
+                'extraction_method': 'dtpa',
+                'deficiency_threshold': 0.5
+            },
+            'available_copper': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [0.1, 10],
+                'extraction_method': 'dtpa',
+                'deficiency_threshold': 0.2
+            },
+            'available_boron': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'valid_range': [0.1, 5],
+                'extraction_method': 'hot_water',
+                'deficiency_threshold': 0.5
+            }
+        }
+    }
+}

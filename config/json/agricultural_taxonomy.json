@@ -1,0 +1,384 @@
+agricultural_taxonomy = {
+    'cereals': {
+        'family': 'Poaceae',
+        'description': 'Graminées productrices de grains',
+        'crops': {
+            'maize': {
+                'scientific_name': 'Zea mays',
+                'local_names': ['maïs', 'blé de Turquie', 'corn'],
+                'varieties_cameroon': [
+                    'KASAI_1', 'CMS_8704', 'COCA_SR', 'ATP_SR_Y',
+                    'SAMMAZ_15', 'SAMMAZ_16', 'Local_White', 'Local_Yellow',
+                    'Hybrid_Cargill', 'Pioneer_varieties'
+                ],
+                'cycle_days': {'min': 90, 'max': 140, 'optimal': 120},
+                'planting_seasons': {
+                    'main': 'March-June',
+                    'secondary': 'August-September'
+                },
+                'agroecological_zones': ['Forest', 'Savanna', 'Highlands'],
+                'yield_potential': {'min': 1.0, 'max': 8.0, 'average': 2.5}
+            },
+            'rice': {
+                'scientific_name': 'Oryza sativa',
+                'local_names': ['riz', 'paddy'],
+                'varieties_cameroon': [
+                    'NERICA_1', 'NERICA_4', 'NERICA_14', 'NERICA_18',
+                    'IR_64', 'WITA_4', 'TOX_3145', 'FKR_19',
+                    'Sahel_108', 'Sahel_177', 'Local_Red'
+                ],
+                'cultivation_systems': ['irrigated', 'lowland_rainfed', 'upland'],
+                'cycle_days': {'min': 105, 'max': 150, 'optimal': 120},
+                'yield_potential': {'min': 1.5, 'max': 6.0, 'average': 3.2}
+            },
+            'sorghum': {
+                'scientific_name': 'Sorghum bicolor',
+                'local_names': ['sorgho', 'mil rouge', 'guinea corn'],
+                'varieties_cameroon': [
+                    'S35', 'IRAT_204', 'Safrari', 'Djigari',
+                    'Local_Red', 'Local_White', 'Sweet_sorghum'
+                ],
+                'drought_tolerance': 'very_high',
+                'cycle_days': {'min': 100, 'max': 130, 'optimal': 115},
+                'yield_potential': {'min': 0.8, 'max': 4.0, 'average': 1.8}
+            },
+            'millet': {
+                'scientific_name': 'Pennisetum glaucum',
+                'local_names': ['mil', 'petit mil', 'pearl millet'],
+                'varieties_cameroon': [
+                    'SOSAT_C88', 'HKP', 'Local_varieties'
+                ],
+                'drought_tolerance': 'extremely_high',
+                'cycle_days': {'min': 75, 'max': 110, 'optimal': 90},
+                'yield_potential': {'min': 0.5, 'max': 3.0, 'average': 1.2}
+            }
+        }
+    },
+    'legumes': {
+        'family': 'Fabaceae',
+        'description': 'Légumineuses fixatrices d\'azote',
+        'nitrogen_fixation': True,
+        'crops': {
+            'cowpea': {
+                'scientific_name': 'Vigna unguiculata',
+                'local_names': ['niébé', 'haricot œil noir', 'black-eyed pea'],
+                'varieties_cameroon': [
+                    'KVx_30_309_6G', 'KVx_396_4_5_2D', 'KVx_61_1',
+                    'KVx_404_8_1', 'Mouride', 'Mougne',
+                    'Local_White', 'Local_Brown', 'Local_Red'
+                ],
+                'cycle_days': {'min': 60, 'max': 90, 'optimal': 75},
+                'intercropping_compatible': ['maize', 'sorghum', 'millet'],
+                'yield_potential': {'min': 0.3, 'max': 2.5, 'average': 0.8}
+            },
+            'groundnut': {
+                'scientific_name': 'Arachis hypogaea',
+                'local_names': ['arachide', 'pistache de terre', 'peanut'],
+                'varieties_cameroon': [
+                    'TS_32_1', 'GH_119_20', 'Fleur_11', 'RMP_12',
+                    'Local_Spanish', 'Local_Valencia', 'Local_Runner',
+                    'Red_Beauty', 'JL_24'
+                ],
+                'cycle_days': {'min': 90, 'max': 120, 'optimal': 105},
+                'oil_content': {'min': 40, 'max': 55},
+                'yield_potential': {'min': 0.5, 'max': 3.0, 'average': 1.2}
+            },
+            'common_bean': {
+                'scientific_name': 'Phaseolus vulgaris',
+                'local_names': ['haricot commun', 'kidney bean'],
+                'varieties_cameroon': [
+                    'CAL_143', 'DOR_390', 'AND_277', 'MAC_44',
+                    'Local_Red', 'Local_White', 'Local_Black'
+                ],
+                'cycle_days': {'min': 65, 'max': 100, 'optimal': 80},
+                'altitude_preference': {'min': 800, 'max': 2500},
+                'yield_potential': {'min': 0.4, 'max': 2.0, 'average': 0.9}
+            },
+            'soybean': {
+                'scientific_name': 'Glycine max',
+                'local_names': ['soja', 'soybean'],
+                'varieties_cameroon': [
+                    'TGx_1448_2E', 'TGx_1019_2EB', 'TGx_1987_10F',
+                    'Doko', 'Samsoy_2', 'Local'
+                ],
+                'cycle_days': {'min': 100, 'max': 130, 'optimal': 115},
+                'protein_content': {'min': 35, 'max': 45},
+                'yield_potential': {'min': 0.8, 'max': 3.5, 'average': 1.5}
+            }
+        }
+    },
+    'root_tubers': {
+        'family': 'Various',
+        'description': 'Racines et tubercules',
+        'storage_organs': True,
+        'crops': {
+            'cassava': {
+                'scientific_name': 'Manihot esculenta',
+                'local_names': ['manioc', 'tapioca', 'yuca'],
+                'varieties_cameroon': [
+                    'TMS_30572', 'TMS_92_0326', 'TMS_30001', 'TMS_4(2)1425',
+                    'Local_Sweet', 'Local_Bitter', 'Yellow_Root',
+                    'Red_Cassava', 'IITA_varieties'
+                ],
+                'cycle_days': {'min': 300, 'max': 540, 'optimal': 365},
+                'drought_tolerance': 'very_high',
+                'soil_adaptation': 'poor_soils_tolerant',
+                'yield_potential': {'min': 8, 'max': 40, 'average': 15}
+            },
+            'sweet_potato': {
+                'scientific_name': 'Ipomoea batatas',
+                'local_names': ['patate douce', 'sweet potato'],
+                'varieties_cameroon': [
+                    'TIS_70357', 'Ex_Igbariam', 'CIP_440037', 'Beauregard',
+                    'Local_Orange', 'Local_White', 'Local_Purple',
+                    'Centennial', 'TIS_varieties'
+                ],
+                'cycle_days': {'min': 90, 'max': 150, 'optimal': 120},
+                'nutritional_value': 'high_beta_carotene',
+                'yield_potential': {'min': 5, 'max': 25, 'average': 12}
+            },
+            'yam': {
+                'scientific_name': 'Dioscorea spp.',
+                'local_names': ['igname', 'yam'],
+                'species_types': {
+                    'white_yam': 'Dioscorea rotundata',
+                    'water_yam': 'Dioscorea alata',
+                    'yellow_yam': 'Dioscorea cayenensis',
+                    'aerial_yam': 'Dioscorea bulbifera'
+                },
+                'varieties_cameroon': [
+                    'TDr_89_02665', 'TDr_95_18544', 'Laboko', 'Krengle',
+                    'Bete_Bete', 'Florido', 'Local_White', 'Local_Yellow'
+                ],
+                'cycle_days': {'min': 180, 'max': 300, 'optimal': 240},
+                'yield_potential': {'min': 10, 'max': 35, 'average': 18}
+            },
+            'potato': {
+                'scientific_name': 'Solanum tuberosum',
+                'local_names': ['pomme de terre', 'potato'],
+                'varieties_cameroon': [
+                    'Cipira', 'Desiree', 'Diamant', 'Spunta',
+                    'Tubira', 'Victoria', 'Local_Red', 'Local_White',
+                    'Altitude_varieties'
+                ],
+                'cycle_days': {'min': 90, 'max': 120, 'optimal': 105},
+                'altitude_requirement': {'min': 1200, 'max': 2500},
+                'temperature_preference': 'cool_climate',
+                'yield_potential': {'min': 8, 'max': 30, 'average': 15}
+            }
+        }
+    },
+    'vegetables': {
+        'family': 'Various',
+        'description': 'Légumes frais',
+        'market_oriented': True,
+        'crops': {
+            'tomato': {
+                'scientific_name': 'Solanum lycopersicum',
+                'local_names': ['tomate', 'tomato'],
+                'varieties_cameroon': [
+                    'Roma_VF', 'Mongal_F1', 'Petomech', 'Tropimech',
+                    'UC_82B', 'Rio_Grande', 'Local_Cherry', 'Local_Round',
+                    'Hybrid_varieties', 'Greenhouse_types'
+                ],
+                'cycle_days': {'min': 70, 'max': 120, 'optimal': 90},
+                'cultivation_systems': ['field', 'greenhouse', 'shade_house'],
+                'market_forms': ['fresh', 'processing', 'paste'],
+                'yield_potential': {'min': 15, 'max': 80, 'average': 35}
+            },
+            'pepper': {
+                'scientific_name': 'Capsicum spp.',
+                'local_names': ['poivron', 'piment', 'pepper'],
+                'species_classification': {
+                    'sweet_pepper': 'Capsicum annuum',
+                    'hot_pepper': 'Capsicum frutescens',
+                    'bird_pepper': 'Capsicum minimum',
+                    'scotch_bonnet': 'Capsicum chinense'
+                },
+                'varieties_cameroon': [
+                    'California_Wonder', 'Yolo_Wonder', 'Marconi',
+                    'Hot_Portugal', 'Scotch_Bonnet', 'Bird_Eye',
+                    'Local_Hot', 'Local_Sweet', 'Habanero_types'
+                ],
+                'cycle_days': {'min': 80, 'max': 130, 'optimal': 100},
+                'heat_levels': ['sweet', 'mild', 'medium', 'hot', 'very_hot'],
+                'yield_potential': {'min': 8, 'max': 40, 'average': 18}
+            },
+            'onion': {
+                'scientific_name': 'Allium cepa',
+                'local_names': ['oignon', 'onion'],
+                'varieties_cameroon': [
+                    'Red_Creole', 'Violet_de_Galmi', 'Goudami',
+                    'Texas_Early_Grano', 'Local_Red', 'Local_White'
+                ],
+                'cycle_days': {'min': 100, 'max': 140, 'optimal': 120},
+                'photoperiod_sensitivity': 'day_length_sensitive',
+                'yield_potential': {'min': 10, 'max': 40, 'average': 20}
+            },
+            'cabbage': {
+                'scientific_name': 'Brassica oleracea var. capitata',
+                'local_names': ['chou pommé', 'cabbage'],
+                'varieties_cameroon': [
+                    'Copenhagen_Market', 'Glory_of_Enkhuizen',
+                    'Golden_Acre', 'Local_Green', 'Local_Red'
+                ],
+                'cycle_days': {'min': 80, 'max': 120, 'optimal': 100},
+                'temperature_preference': 'cool_season',
+                'altitude_preference': {'min': 800, 'max': 2000},
+                'yield_potential': {'min': 20, 'max': 60, 'average': 35}
+            },
+            'carrot': {
+                'scientific_name': 'Daucus carota',
+                'local_names': ['carotte', 'carrot'],
+                'varieties_cameroon': [
+                    'Nantes', 'Chantenay', 'Imperator',
+                    'Local_Orange', 'Baby_carrots'
+                ],
+                'cycle_days': {'min': 70, 'max': 100, 'optimal': 85},
+                'soil_preference': 'deep_sandy_loam',
+                'yield_potential': {'min': 15, 'max': 50, 'average': 25}
+            },
+            'lettuce': {
+                'scientific_name': 'Lactuca sativa',
+                'local_names': ['laitue', 'salade', 'lettuce'],
+                'varieties_cameroon': [
+                    'Great_Lakes', 'Buttercrunch', 'Black_Seeded_Simpson',
+                    'Local_Green', 'Iceberg_types'
+                ],
+                'cycle_days': {'min': 45, 'max': 80, 'optimal': 60},
+                'temperature_preference': 'cool_season',
+                'yield_potential': {'min': 8, 'max': 25, 'average': 15}
+            },
+            'cucumber': {
+                'scientific_name': 'Cucumis sativus',
+                'local_names': ['concombre', 'cucumber'],
+                'varieties_cameroon': [
+                    'Marketmore', 'Suyo_Long', 'Ashley',
+                    'Local_Green', 'Pickling_types'
+                ],
+                'cycle_days': {'min': 50, 'max': 70, 'optimal': 60},
+                'growing_systems': ['field', 'trellis', 'greenhouse'],
+                'yield_potential': {'min': 10, 'max': 40, 'average': 20}
+            },
+            'okra': {
+                'scientific_name': 'Abelmoschus esculentus',
+                'local_names': ['gombo', 'okra', 'lady finger'],
+                'varieties_cameroon': [
+                    'Clemson_Spineless', 'Emerald', 'Annie_Oakley',
+                    'Local_Green', 'Red_okra'
+                ],
+                'cycle_days': {'min': 55, 'max': 90, 'optimal': 70},
+                'heat_tolerance': 'very_high',
+                'yield_potential': {'min': 5, 'max': 20, 'average': 10}
+            }
+        }
+    },
+    'fruits': {
+        'family': 'Various',
+        'description': 'Fruits tropicaux et tempérés',
+        'perennial_crops': True,
+        'crops': {
+            'plantain_banana': {
+                'scientific_name': 'Musa spp.',
+                'local_names': ['plantain', 'banane', 'banana'],
+                'varieties_cameroon': [
+                    'French_Clair', 'Big_Ebanga', 'Batard', 'Mbouroukou_1',
+                    'PITA_14', 'PITA_17', 'FHIA_varieties',
+                    'Cavendish', 'Local_varieties'
+                ],
+                'cycle_days': {'min': 300, 'max': 450, 'optimal': 365},
+                'production_system': 'continuous_harvest',
+                'yield_potential': {'min': 20, 'max': 60, 'average': 35}
+            },
+            'pineapple': {
+                'scientific_name': 'Ananas comosus',
+                'local_names': ['ananas', 'pineapple'],
+                'varieties_cameroon': [
+                    'Smooth_Cayenne', 'Queen', 'Sugarloaf',
+                    'MD2', 'Local_varieties'
+                ],
+                'cycle_days': {'min': 450, 'max': 600, 'optimal': 540},
+                'fruit_quality': 'export_potential',
+                'yield_potential': {'min': 30, 'max': 80, 'average': 50}
+            },
+            'papaya': {
+                'scientific_name': 'Carica papaya',
+                'local_names': ['papaye', 'pawpaw'],
+                'varieties_cameroon': [
+                    'Solo', 'Improved_Peterson', 'Red_Lady',
+                    'Sunrise', 'Local_varieties'
+                ],
+                'cycle_days': {'min': 300, 'max': 400, 'optimal': 365},
+                'gender_types': ['hermaphrodite', 'female', 'male'],
+                'yield_potential': {'min': 40, 'max': 100, 'average': 60}
+            },
+            'mango': {
+                'scientific_name': 'Mangifera indica',
+                'local_names': ['mangue', 'mango'],
+                'varieties_cameroon': [
+                    'Kent', 'Keitt', 'Tommy_Atkins', 'Palmer',
+                    'Local_varieties', 'Improved_local'
+                ],
+                'maturity_period': 'perennial_tree',
+                'fruiting_season': 'March_to_July',
+                'yield_potential': {'min': 50, 'max': 200, 'average': 100}
+            }
+        }
+    },
+    'cash_crops': {
+        'family': 'Various',
+        'description': 'Cultures d\'exportation et industrielles',
+        'economic_importance': 'high',
+        'crops': {
+            'cocoa': {
+                'scientific_name': 'Theobroma cacao',
+                'local_names': ['cacao', 'cocoa'],
+                'varieties_cameroon': [
+                    'Trinitario', 'Amelonado', 'SNK_series',
+                    'ICS_series', 'Upper_Amazon', 'Local_varieties'
+                ],
+                'maturity_period': 'perennial_tree',
+                'altitude_preference': {'min': 200, 'max': 800},
+                'shade_requirement': 'partial_shade',
+                'yield_potential': {'min': 0.3, 'max': 1.5, 'average': 0.6}
+            },
+            'coffee': {
+                'scientific_name': 'Coffea spp.',
+                'local_names': ['café', 'coffee'],
+                'species_types': {
+                    'arabica': 'Coffea arabica',
+                    'robusta': 'Coffea canephora'
+                },
+                'varieties_cameroon': [
+                    'Java', 'Blue_Mountain', 'Catimor', 'Caturra',
+                    'Local_varieties', 'Resistant_varieties'
+                ],
+                'altitude_preference': {'min': 800, 'max': 2000},
+                'processing_types': ['wet', 'dry', 'honey'],
+                'yield_potential': {'min': 0.5, 'max': 2.0, 'average': 0.8}
+            },
+            'cotton': {
+                'scientific_name': 'Gossypium hirsutum',
+                'local_names': ['coton', 'cotton'],
+                'varieties_cameroon': [
+                    'IRMA_1239', 'IRMA_42_3', 'L484',
+                    'Local_varieties', 'Bt_cotton'
+                ],
+                'cycle_days': {'min': 150, 'max': 200, 'optimal': 175},
+                'fiber_quality': 'medium_staple',
+                'yield_potential': {'min': 0.8, 'max': 2.5, 'average': 1.2}
+            },
+            'oil_palm': {
+                'scientific_name': 'Elaeis guineensis',
+                'local_names': ['palmier à huile', 'oil palm'],
+                'varieties_cameroon': [
+                    'Tenera', 'Dura', 'Pisifera',
+                    'Hybrid_varieties', 'Local_varieties'
+                ],
+                'maturity_period': 'perennial_palm',
+                'oil_content': {'palm_oil': 20, 'kernel_oil': 5},
+                'yield_potential': {'min': 8, 'max': 25, 'average': 15}
+            }
+        }
+    }
+}

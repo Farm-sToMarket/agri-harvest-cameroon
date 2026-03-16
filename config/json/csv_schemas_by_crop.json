@@ -1,0 +1,116 @@
+csv_schemas_by_crop = {
+    'cereals_data.csv': {
+        'description': 'Données des céréales (maïs, riz, sorgho, millet)',
+        'columns': [
+            {'name': 'field_id', 'dtype': 'string', 'unique': True},
+            {'name': 'crop_type', 'dtype': 'category', 'values': ['maize', 'rice', 'sorghum', 'millet']},
+            {'name': 'variety', 'dtype': 'string'},
+            {'name': 'year', 'dtype': 'int16', 'range': [2000, 2024]},
+            {'name': 'season', 'dtype': 'category', 'values': ['main', 'dry', 'off-season']},
+            {'name': 'latitude', 'dtype': 'float64', 'precision': 6},
+            {'name': 'longitude', 'dtype': 'float64', 'precision': 6},
+            {'name': 'elevation', 'dtype': 'float32', 'units': 'm'},
+            {'name': 'area_hectares', 'dtype': 'float32', 'range': [0.1, 100]},
+            {'name': 'planting_date', 'dtype': 'datetime64[D]'},
+            {'name': 'harvest_date', 'dtype': 'datetime64[D]'},
+            {'name': 'cycle_length', 'dtype': 'int16', 'units': 'days'},
+            {'name': 'planting_density', 'dtype': 'int32', 'units': 'plants/ha'},
+            {'name': 'nitrogen_kg_ha', 'dtype': 'float32', 'range': [0, 300]},
+            {'name': 'phosphorus_kg_ha', 'dtype': 'float32', 'range': [0, 150]},
+            {'name': 'potassium_kg_ha', 'dtype': 'float32', 'range': [0, 200]},
+            {'name': 'organic_fertilizer_tha', 'dtype': 'float32', 'range': [0, 20]},
+            {'name': 'irrigation', 'dtype': 'bool'},
+            {'name': 'yield_tha', 'dtype': 'float32', 'range': [0, 15]},
+            {'name': 'biomass_tha', 'dtype': 'float32', 'range': [0, 50]},
+            {'name': 'harvest_index', 'dtype': 'float32', 'range': [0.2, 0.6]},
+            {'name': 'grain_moisture', 'dtype': 'float32', 'range': [10, 25]},
+            {'name': 'protein_content', 'dtype': 'float32', 'range': [6, 20]}
+        ],
+        'constraints': [
+            'harvest_date > planting_date',
+            'yield_tha * harvest_index <= biomass_tha',
+            'area_hectares > 0'
+        ]
+    },
+    'vegetables_data.csv': {
+        'description': 'Données des légumes (tomate, poivron, laitue, etc.)',
+        'columns': [
+            {'name': 'field_id', 'dtype': 'string', 'unique': True},
+            {'name': 'crop_type', 'dtype': 'category', 'values': [
+                'tomato', 'pepper', 'onion', 'cabbage', 'carrot', 
+                'lettuce', 'cucumber', 'okra'
+            ]},
+            {'name': 'variety', 'dtype': 'string'},
+            {'name': 'cultivation_system', 'dtype': 'category', 'values': [
+                'open_field', 'greenhouse', 'shade_house', 'hydroponic'
+            ]},
+            {'name': 'planting_method', 'dtype': 'category', 'values': [
+                'direct_seeding', 'transplanting'
+            ]},
+            {'name': 'plant_support', 'dtype': 'category', 'values': [
+                'none', 'stakes', 'trellis', 'cages'
+            ]},
+            {'name': 'mulching', 'dtype': 'bool'},
+            {'name': 'pruning_practice', 'dtype': 'bool'},
+            {'name': 'harvest_frequency', 'dtype': 'int8', 'range': [1, 20]},
+            {'name': 'market_destination', 'dtype': 'category', 'values': [
+                'local_market', 'regional_market', 'export', 'processing'
+            ]},
+            {'name': 'fruit_size_average', 'dtype': 'float32', 'units': 'g'},
+            {'name': 'fruit_quality_grade', 'dtype': 'category', 'values': [
+                'grade_1', 'grade_2', 'grade_3', 'processing'
+            ]},
+            {'name': 'brix_content', 'dtype': 'float32', 'range': [3, 12]},
+            {'name': 'shelf_life_days', 'dtype': 'int8', 'range': [1, 30]}
+        ]
+    },
+    'root_tubers_data.csv': {
+        'description': 'Données des tubercules (manioc, patate douce, igname, pomme de terre)',
+        'columns': [
+            {'name': 'crop_type', 'dtype': 'category', 'values': [
+                'cassava', 'sweet_potato', 'yam', 'potato'
+            ]},
+            {'name': 'propagation_material', 'dtype': 'category', 'values': [
+                'stem_cuttings', 'vine_cuttings', 'tuber_pieces', 'whole_tubers', 'true_seeds'
+            ]},
+            {'name': 'plant_spacing_cm', 'dtype': 'float32', 'range': [20, 150]},
+            {'name': 'row_spacing_cm', 'dtype': 'float32', 'range': [50, 200]},
+            {'name': 'hilling_frequency', 'dtype': 'int8', 'range': [0, 5]},
+            {'name': 'storage_root_yield_tha', 'dtype': 'float32', 'range': [1, 50]},
+            {'name': 'dry_matter_content', 'dtype': 'float32', 'range': [15, 45]},
+            {'name': 'starch_content', 'dtype': 'float32', 'range': [60, 85]},
+            {'name': 'fiber_content', 'dtype': 'float32', 'range': [0.5, 5]},
+            {'name': 'beta_carotene_mg100g', 'dtype': 'float32', 'range': [0, 15]},
+            {'name': 'storage_duration_days', 'dtype': 'int16', 'range': [1, 365]},
+            {'name': 'post_harvest_losses', 'dtype': 'float32', 'range': [0, 50]}
+        ]
+    },
+    'tree_crops_data.csv': {
+        'description': 'Données des cultures pérennes (cacao, café, palmier, etc.)',
+        'columns': [
+            {'name': 'crop_type', 'dtype': 'category', 'values': [
+                'cocoa', 'coffee', 'oil_palm', 'mango', 'plantain_banana'
+            ]},
+            {'name': 'planting_year', 'dtype': 'int16', 'range': [1980, 2024]},
+            {'name': 'tree_age_years', 'dtype': 'int8', 'range': [1, 50]},
+            {'name': 'planting_density_trees_ha', 'dtype': 'int16', 'range': [100, 2000]},
+            {'name': 'shade_management', 'dtype': 'category', 'values': [
+                'full_sun', 'partial_shade', 'heavy_shade'
+            ]},
+            {'name': 'pruning_intensity', 'dtype': 'category', 'values': [
+                'none', 'light', 'moderate', 'heavy'
+            ]},
+            {'name': 'pest_pressure', 'dtype': 'category', 'values': [
+                'low', 'moderate', 'high'
+            ]},
+            {'name': 'disease_incidence', 'dtype': 'float32', 'range': [0, 100]},
+            {'name': 'annual_yield_kg_ha', 'dtype': 'float32', 'range': [100, 5000]},
+            {'name': 'quality_grade', 'dtype': 'category', 'values': [
+                'grade_1', 'grade_2', 'standard', 'below_standard'
+            ]},
+            {'name': 'processing_type', 'dtype': 'category', 'values': [
+                'fresh_consumption', 'dried', 'fermented', 'oil_extraction'
+            ]}
+        ]
+    }
+}

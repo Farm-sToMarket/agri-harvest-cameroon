@@ -1,0 +1,881 @@
+agricultural_taxonomy_ml_optimized = {
+    'metadata': {
+        'version': '2.0.0',
+        'purpose': 'crop_yield_prediction_taxonomy',
+        'target_region': 'cameroon_central_africa',
+        'classification_system': 'hierarchical_ml_ready',
+        'encoding_strategy': 'multi_level_categorical'
+    },
+    
+    'classification_hierarchy': {
+        'kingdom': 'Plantae',
+        'classification_levels': [
+            'family', 'genus', 'species', 'subspecies',
+            'crop_group', 'crop_type', 'variety_class', 'cultivar'
+        ],
+        'ml_encoding_levels': [
+            'crop_group_encoded',
+            'crop_type_encoded', 
+            'variety_characteristics_encoded'
+        ]
+    },
+    
+    'cereals': {
+        'family': 'Poaceae',
+        'description': 'Graminées productrices de grains',
+        'physiological_characteristics': {
+            'photosynthesis_type': 'C4_dominant',
+            'growth_habit': 'annual_tillering',
+            'root_system': 'fibrous',
+            'stress_tolerance': 'drought_heat_tolerant'
+        },
+        'ml_crop_group_id': 1,
+        
+        'crops': {
+            'maize': {
+                'scientific_classification': {
+                    'scientific_name': 'Zea mays',
+                    'genus': 'Zea',
+                    'species': 'mays',
+                    'chromosome_number': '2n=20'
+                },
+                'local_identification': {
+                    'local_names': ['maïs', 'blé_de_turquie', 'corn', 'mais_tchad'],
+                    'regional_variations': 'dialect_specific'
+                },
+                'ml_crop_type_id': 101,
+                
+                'varieties_cameroon_detailed': {
+                    'improved_varieties': {
+                        'KASAI_1': {
+                            'origin': 'IRAD_selection',
+                            'maturity_days': 120,
+                            'yield_potential': [4000, 6000],
+                            'stress_tolerance': {
+                                'drought': 'moderate',
+                                'striga': 'tolerant',
+                                'lodging': 'resistant'
+                            },
+                            'grain_characteristics': {
+                                'color': 'white',
+                                'texture': 'flint',
+                                'protein_content': 9.5
+                            },
+                            'ml_variety_id': 10101
+                        },
+                        'CMS_8704': {
+                            'origin': 'CIMMYT_adaptation',
+                            'maturity_days': 115,
+                            'yield_potential': [3500, 5500],
+                            'stress_tolerance': {
+                                'drought': 'high',
+                                'disease_resistance': 'multiple',
+                                'nitrogen_efficiency': 'high'
+                            },
+                            'ml_variety_id': 10102
+                        },
+                        'SAMMAZ_15': {
+                            'origin': 'IITA_breeding',
+                            'maturity_days': 110,
+                            'yield_potential': [4500, 7000],
+                            'stress_tolerance': {
+                                'drought': 'very_high',
+                                'low_nitrogen': 'tolerant',
+                                'striga': 'resistant'
+                            },
+                            'ml_variety_id': 10103
+                        }
+                    },
+                    'local_varieties': {
+                        'Local_White': {
+                            'origin': 'farmer_selection',
+                            'maturity_days': 130,
+                            'yield_potential': [1500, 3000],
+                            'adaptation': 'local_conditions',
+                            'ml_variety_id': 10191
+                        },
+                        'Local_Yellow': {
+                            'origin': 'traditional',
+                            'maturity_days': 125,
+                            'yield_potential': [1200, 2800],
+                            'nutritional_advantage': 'beta_carotene',
+                            'ml_variety_id': 10192
+                        }
+                    },
+                    'hybrid_varieties': {
+                        'Pioneer_30G19': {
+                            'type': 'commercial_hybrid',
+                            'maturity_days': 105,
+                            'yield_potential': [6000, 8000],
+                            'input_requirements': 'high_fertility',
+                            'market_availability': 'limited',
+                            'ml_variety_id': 10151
+                        }
+                    }
+                },
+                
+                'physiological_parameters': {
+                    'growth_characteristics': {
+                        'cycle_length': {
+                            'min_days': 90,
+                            'max_days': 140,
+                            'optimal_days': 120,
+                            'temperature_dependent': True
+                        },
+                        'growth_stages': {
+                            'germination': [0, 10],
+                            'vegetative': [10, 50],
+                            'tasseling': [50, 65],
+                            'grain_filling': [65, 95],
+                            'maturity': [95, 120]
+                        },
+                        'critical_periods': {
+                            'water_stress_sensitive': [45, 75],
+                            'nutrient_uptake_peak': [30, 60],
+                            'yield_determination': [50, 80]
+                        }
+                    },
+                    'environmental_requirements': {
+                        'temperature': {
+                            'base_temperature': 10,
+                            'optimal_range': [20, 30],
+                            'maximum_tolerance': 40,
+                            'cold_sensitivity': 'high'
+                        },
+                        'water_requirements': {
+                            'seasonal_total': [500, 800],
+                            'critical_periods': 'tasseling_grain_filling',
+                            'drought_tolerance': 'moderate'
+                        },
+                        'soil_preferences': {
+                            'ph_range': [6.0, 7.5],
+                            'texture_preference': 'well_drained_loam',
+                            'fertility_requirements': 'medium_high'
+                        }
+                    }
+                },
+                
+                'planting_seasons_regional': {
+                    'northern_cameroon': {
+                        'main_season': {
+                            'planting_window': [135, 165],  # day of year
+                            'rainfall_dependency': 'high',
+                            'risk_factors': ['drought', 'striga']
+                        }
+                    },
+                    'central_cameroon': {
+                        'main_season': {
+                            'planting_window': [75, 135],
+                            'yield_potential': 'high'
+                        },
+                        'second_season': {
+                            'planting_window': [225, 255],
+                            'yield_potential': 'medium'
+                        }
+                    },
+                    'southern_cameroon': {
+                        'main_season': {
+                            'planting_window': [60, 120],
+                            'bimodal_rainfall': True
+                        }
+                    }
+                },
+                
+                'yield_prediction_factors': {
+                    'primary_drivers': [
+                        'variety_yield_potential',
+                        'rainfall_distribution',
+                        'soil_fertility',
+                        'pest_pressure'
+                    ],
+                    'limiting_factors': [
+                        'drought_stress',
+                        'striga_infestation',
+                        'nitrogen_deficiency',
+                        'storage_pest_damage'
+                    ],
+                    'management_response': {
+                        'fertilizer_response': 'high',
+                        'irrigation_response': 'very_high',
+                        'density_optimization': 'important'
+                    }
+                }
+            },
+            
+            'rice': {
+                'scientific_classification': {
+                    'scientific_name': 'Oryza sativa',
+                    'genus': 'Oryza',
+                    'species': 'sativa',
+                    'subspecies': ['indica', 'japonica']
+                },
+                'ml_crop_type_id': 102,
+                
+                'cultivation_systems': {
+                    'lowland_irrigated': {
+                        'water_management': 'continuous_flooding',
+                        'yield_potential': [4000, 8000],
+                        'areas': ['northern_plains', 'river_valleys']
+                    },
+                    'lowland_rainfed': {
+                        'water_dependency': 'rainfall_dependent',
+                        'yield_potential': [2000, 5000],
+                        'risk_factors': ['drought', 'flooding']
+                    },
+                    'upland': {
+                        'water_management': 'rainfed',
+                        'yield_potential': [1500, 3500],
+                        'adaptation': 'hillside_cultivation'
+                    }
+                },
+                
+                'varieties_classification': {
+                    'nerica_varieties': {
+                        'NERICA_1': {
+                            'adaptation': 'upland_conditions',
+                            'drought_tolerance': 'high',
+                            'cycle_days': 120,
+                            'ml_variety_id': 10201
+                        },
+                        'NERICA_4': {
+                            'protein_content': 'enhanced',
+                            'cycle_days': 110,
+                            'ml_variety_id': 10202
+                        }
+                    },
+                    'asian_varieties': {
+                        'IR_64': {
+                            'origin': 'IRRI',
+                            'adaptation': 'irrigated_lowland',
+                            'yield_potential': [5000, 7000],
+                            'ml_variety_id': 10251
+                        }
+                    }
+                },
+                
+                'physiological_parameters': {
+                    'growth_stages': {
+                        'germination': [0, 7],
+                        'vegetative': [7, 65],
+                        'reproductive': [65, 95],
+                        'ripening': [95, 120]
+                    },
+                    'water_sensitivity': {
+                        'flooding_tolerance': 'variety_dependent',
+                        'drought_critical_periods': ['flowering', 'grain_filling']
+                    }
+                }
+            },
+            
+            'sorghum': {
+                'scientific_classification': {
+                    'scientific_name': 'Sorghum bicolor',
+                    'genus': 'Sorghum',
+                    'species': 'bicolor'
+                },
+                'ml_crop_type_id': 103,
+                
+                'stress_tolerance_profile': {
+                    'drought_tolerance': 'very_high',
+                    'heat_tolerance': 'excellent',
+                    'aluminum_tolerance': 'good',
+                    'salinity_tolerance': 'moderate'
+                },
+                
+                'varieties_adaptation': {
+                    'early_varieties': {
+                        'S35': {
+                            'maturity_days': 100,
+                            'adaptation': 'short_season_areas',
+                            'ml_variety_id': 10301
+                        }
+                    },
+                    'medium_varieties': {
+                        'IRAT_204': {
+                            'maturity_days': 115,
+                            'grain_quality': 'excellent',
+                            'ml_variety_id': 10302
+                        }
+                    }
+                },
+                
+                'utilization_patterns': {
+                    'grain_sorghum': {
+                        'food_use': 'human_consumption',
+                        'processing': ['flour', 'porridge', 'beer']
+                    },
+                    'sweet_sorghum': {
+                        'sugar_content': 'high',
+                        'multipurpose': ['food', 'feed', 'biofuel']
+                    }
+                }
+            },
+            
+            'millet': {
+                'scientific_classification': {
+                    'scientific_name': 'Pennisetum glaucum',
+                    'genus': 'Pennisetum',
+                    'species': 'glaucum',
+                    'common_name': 'pearl_millet'
+                },
+                'ml_crop_type_id': 104,
+                
+                'extreme_adaptation': {
+                    'drought_tolerance': 'extreme',
+                    'heat_tolerance': 'exceptional',
+                    'poor_soil_adaptation': 'excellent',
+                    'minimum_rainfall': 200  # mm
+                },
+                
+                'nutritional_profile': {
+                    'protein_content': [12, 16],  # percent
+                    'micronutrients': 'iron_zinc_rich',
+                    'digestibility': 'high'
+                },
+                
+                'climate_change_relevance': {
+                    'future_importance': 'increasing',
+                    'adaptation_value': 'climate_resilience',
+                    'research_priority': 'high'
+                }
+            }
+        }
+    },
+    
+    'legumes': {
+        'family': 'Fabaceae',
+        'description': 'Légumineuses fixatrices d\'azote',
+        'physiological_characteristics': {
+            'nitrogen_fixation': True,
+            'symbiotic_bacteria': 'Rhizobium_species',
+            'soil_improvement': 'organic_matter_nitrogen',
+            'rotation_value': 'very_high'
+        },
+        'ml_crop_group_id': 2,
+        
+        'crops': {
+            'cowpea': {
+                'scientific_classification': {
+                    'scientific_name': 'Vigna unguiculata',
+                    'genus': 'Vigna',
+                    'species': 'unguiculata'
+                },
+                'ml_crop_type_id': 201,
+                
+                'dual_purpose_nature': {
+                    'grain_production': 'primary',
+                    'fodder_value': 'secondary',
+                    'green_manure': 'soil_improvement'
+                },
+                
+                'varieties_detailed': {
+                    'improved_varieties': {
+                        'KVx_30_309_6G': {
+                            'maturity_days': 75,
+                            'pod_characteristics': 'long_straight',
+                            'yield_potential': [1200, 2000],
+                            'ml_variety_id': 20101
+                        },
+                        'KVx_396_4_5_2D': {
+                            'maturity_days': 70,
+                            'growth_habit': 'erect',
+                            'mechanization_suitable': True,
+                            'ml_variety_id': 20102
+                        }
+                    },
+                    'local_varieties': {
+                        'Mouride': {
+                            'origin': 'farmer_selection',
+                            'adaptation': 'local_conditions',
+                            'grain_color': 'white',
+                            'ml_variety_id': 20191
+                        }
+                    }
+                },
+                
+                'intercropping_compatibility': {
+                    'compatible_crops': ['maize', 'sorghum', 'millet'],
+                    'spatial_arrangements': ['row_intercropping', 'strip_cropping'],
+                    'benefits': ['land_use_efficiency', 'risk_reduction']
+                },
+                
+                'stress_adaptation': {
+                    'drought_tolerance': 'high',
+                    'heat_tolerance': 'excellent',
+                    'pest_resistance': {
+                        'aphids': 'variable',
+                        'thrips': 'moderate',
+                        'storage_pests': 'susceptible'
+                    }
+                }
+            },
+            
+            'groundnut': {
+                'scientific_classification': {
+                    'scientific_name': 'Arachis hypogaea',
+                    'genus': 'Arachis',
+                    'species': 'hypogaea'
+                },
+                'ml_crop_type_id': 202,
+                
+                'botanical_types': {
+                    'spanish_type': {
+                        'pod_characteristics': 'small_clustered',
+                        'maturity': 'early',
+                        'oil_content': [48, 52]
+                    },
+                    'valencia_type': {
+                        'seeds_per_pod': [3, 4],
+                        'skin_color': 'red',
+                        'market_preference': 'confectionery'
+                    },
+                    'virginia_type': {
+                        'pod_size': 'large',
+                        'maturity': 'late',
+                        'oil_content': [45, 50]
+                    }
+                },
+                
+                'calcium_requirements': {
+                    'unique_feature': 'calcium_uptake_by_pods',
+                    'soil_calcium_critical': True,
+                    'gypsum_response': 'positive'
+                },
+                
+                'aflatoxin_considerations': {
+                    'aspergillus_susceptibility': 'high_under_stress',
+                    'prevention_strategies': ['proper_drying', 'storage_management'],
+                    'drought_stress_relationship': 'positive_correlation'
+                }
+            },
+            
+            'soybean': {
+                'scientific_classification': {
+                    'scientific_name': 'Glycine max',
+                    'genus': 'Glycine',
+                    'species': 'max'
+                },
+                'ml_crop_type_id': 203,
+                
+                'photoperiod_sensitivity': {
+                    'day_length_response': 'short_day_plant',
+                    'latitude_adaptation': 'critical',
+                    'variety_selection': 'maturity_group_important'
+                },
+                
+                'protein_oil_relationship': {
+                    'protein_content': [35, 45],
+                    'oil_content': [18, 25],
+                    'inverse_relationship': 'negative_correlation'
+                },
+                
+                'industrial_applications': {
+                    'oil_extraction': 'primary_processing',
+                    'protein_meal': 'animal_feed',
+                    'food_applications': ['tofu', 'soy_milk', 'tempeh']
+                }
+            }
+        }
+    },
+    
+    'root_tubers': {
+        'description': 'Cultures à organes de réserve souterrains',
+        'physiological_characteristics': {
+            'storage_organs': ['roots', 'tubers', 'rhizomes'],
+            'vegetative_propagation': 'common',
+            'food_security_role': 'staple_crops',
+            'processing_potential': 'high'
+        },
+        'ml_crop_group_id': 3,
+        
+        'crops': {
+            'cassava': {
+                'scientific_classification': {
+                    'scientific_name': 'Manihot esculenta',
+                    'family': 'Euphorbiaceae',
+                    'genus': 'Manihot',
+                    'species': 'esculenta'
+                },
+                'ml_crop_type_id': 301,
+                
+                'adaptation_advantages': {
+                    'drought_tolerance': 'exceptional',
+                    'poor_soil_tolerance': 'excellent',
+                    'low_input_requirements': 'minimal_fertilizer',
+                    'storage_in_ground': 'flexible_harvest'
+                },
+                
+                'varieties_classification': {
+                    'improved_varieties': {
+                        'TMS_30572': {
+                            'resistance_profile': ['cmd', 'cbsd'],
+                            'root_characteristics': 'high_dry_matter',
+                            'cooking_quality': 'excellent',
+                            'ml_variety_id': 30101
+                        },
+                        'TMS_92_0326': {
+                            'early_maturity': True,
+                            'harvest_window': [8, 12],  # months
+                            'processing_suitability': 'gari_fufu',
+                            'ml_variety_id': 30102
+                        }
+                    },
+                    'local_varieties': {
+                        'Local_Sweet': {
+                            'cyanide_content': 'low',
+                            'direct_consumption': 'safe',
+                            'processing_requirement': 'minimal',
+                            'ml_variety_id': 30191
+                        },
+                        'Local_Bitter': {
+                            'cyanide_content': 'high',
+                            'processing_requirement': 'mandatory',
+                            'yield_potential': 'higher',
+                            'ml_variety_id': 30192
+                        }
+                    }
+                },
+                
+                'disease_resistance_breeding': {
+                    'cassava_mosaic_disease': {
+                        'economic_importance': 'very_high',
+                        'resistance_sources': 'wild_relatives',
+                        'breeding_progress': 'significant'
+                    },
+                    'cassava_brown_streak': {
+                        'emerging_threat': True,
+                        'resistance_development': 'ongoing'
+                    }
+                },
+                
+                'processing_products': {
+                    'traditional_products': ['gari', 'fufu', 'tapioca'],
+                    'industrial_products': ['starch', 'ethanol', 'animal_feed'],
+                    'value_addition_potential': 'very_high'
+                }
+            },
+            
+            'sweet_potato': {
+                'scientific_classification': {
+                    'scientific_name': 'Ipomoea batatas',
+                    'family': 'Convolvulaceae',
+                    'genus': 'Ipomoea',
+                    'species': 'batatas'
+                },
+                'ml_crop_type_id': 302,
+                
+                'nutritional_diversity': {
+                    'orange_fleshed_varieties': {
+                        'beta_carotene_content': 'very_high',
+                        'vitamin_a_precursor': True,
+                        'nutrition_security': 'malnutrition_intervention'
+                    },
+                    'purple_fleshed_varieties': {
+                        'anthocyanin_content': 'high',
+                        'antioxidant_properties': 'excellent'
+                    },
+                    'white_fleshed_varieties': {
+                        'starch_content': 'high',
+                        'energy_density': 'maximum'
+                    }
+                },
+                
+                'rapid_multiplication': {
+                    'vegetative_propagation': 'vine_cuttings',
+                    'multiplication_rate': 'very_high',
+                    'seed_system': 'informal_dominant'
+                }
+            },
+            
+            'yam': {
+                'scientific_classification': {
+                    'genus': 'Dioscorea',
+                    'family': 'Dioscoreaceae'
+                },
+                'ml_crop_type_id': 303,
+                
+                'species_diversity': {
+                    'white_yam': {
+                        'scientific_name': 'Dioscorea rotundata',
+                        'origin': 'west_africa',
+                        'cultural_importance': 'very_high',
+                        'ml_species_id': 30301
+                    },
+                    'water_yam': {
+                        'scientific_name': 'Dioscorea alata',
+                        'origin': 'asia',
+                        'tuber_size': 'very_large',
+                        'ml_species_id': 30302
+                    },
+                    'yellow_yam': {
+                        'scientific_name': 'Dioscorea cayenensis',
+                        'flesh_color': 'yellow',
+                        'cooking_quality': 'premium',
+                        'ml_species_id': 30303
+                    }
+                },
+                
+                'cultural_significance': {
+                    'ceremonial_importance': 'new_yam_festivals',
+                    'social_status': 'wealth_indicator',
+                    'gender_roles': 'traditionally_male_crop'
+                },
+                
+                'production_challenges': {
+                    'labor_intensive': 'high_labor_requirements',
+                    'storage_difficulties': 'post_harvest_losses',
+                    'seed_yam_cost': 'high_production_cost'
+                }
+            }
+        }
+    },
+    
+    'vegetables': {
+        'description': 'Cultures maraîchères à cycle court',
+        'physiological_characteristics': {
+            'growth_duration': 'short_to_medium',
+            'intensive_management': 'high_input_high_output',
+            'market_orientation': 'fresh_consumption',
+            'nutritional_diversity': 'vitamins_minerals'
+        },
+        'ml_crop_group_id': 4,
+        
+        'crops': {
+            'tomato': {
+                'scientific_classification': {
+                    'scientific_name': 'Solanum lycopersicum',
+                    'family': 'Solanaceae',
+                    'genus': 'Solanum',
+                    'species': 'lycopersicum'
+                },
+                'ml_crop_type_id': 401,
+                
+                'growth_habit_classification': {
+                    'determinate': {
+                        'growth_pattern': 'bush_type',
+                        'flowering': 'simultaneous',
+                        'harvest': 'concentrated',
+                        'processing_suitability': 'excellent'
+                    },
+                    'indeterminate': {
+                        'growth_pattern': 'vine_type',
+                        'flowering': 'continuous',
+                        'harvest': 'extended_period',
+                        'fresh_market_suitability': 'excellent'
+                    }
+                },
+                
+                'fruit_type_classification': {
+                    'cherry_tomatoes': {
+                        'fruit_weight': [10, 30],  # grams
+                        'market_segment': 'premium_fresh',
+                        'shelf_life': 'extended'
+                    },
+                    'processing_tomatoes': {
+                        'fruit_weight': [80, 150],
+                        'solids_content': 'high',
+                        'industrial_use': 'paste_sauce'
+                    },
+                    'fresh_market_tomatoes': {
+                        'fruit_weight': [100, 300],
+                        'appearance': 'attractive',
+                        'transport_tolerance': 'good'
+                    }
+                },
+                
+                'disease_resistance_genes': {
+                    'fusarium_wilt': ['I1', 'I2', 'I3'],
+                    'verticillium_wilt': ['Ve1', 'Ve2'],
+                    'bacterial_wilt': ['Bwr1'],
+                    'nematodes': ['Mi1', 'Mi3']
+                }
+            },
+            
+            'pepper': {
+                'scientific_classification': {
+                    'genus': 'Capsicum',
+                    'family': 'Solanaceae'
+                },
+                'ml_crop_type_id': 402,
+                
+                'species_heat_classification': {
+                    'sweet_pepper': {
+                        'scientific_name': 'Capsicum annuum',
+                        'capsaicin_content': 0,
+                        'scoville_units': [0, 100],
+                        'market_use': 'fresh_cooking'
+                    },
+                    'hot_pepper': {
+                        'scientific_name': 'Capsicum frutescens',
+                        'capsaicin_content': 'variable',
+                        'scoville_units': [30000, 125000],
+                        'processing_use': 'spice_sauce'
+                    },
+                    'super_hot_pepper': {
+                        'scientific_name': 'Capsicum chinense',
+                        'scoville_units': [100000, 2200000],
+                        'specialty_market': 'extreme_heat'
+                    }
+                },
+                
+                'adaptation_strategies': {
+                    'heat_tolerance': 'variety_dependent',
+                    'disease_resistance': 'breeding_priority',
+                    'post_harvest_processing': 'value_addition'
+                }
+            }
+        }
+    },
+    
+    'tree_crops': {
+        'description': 'Cultures pérennes arboricoles',
+        'physiological_characteristics': {
+            'life_cycle': 'perennial',
+            'establishment_period': 'long_term_investment',
+            'production_duration': 'decades',
+            'management_intensity': 'continuous'
+        },
+        'ml_crop_group_id': 5,
+        
+        'crops': {
+            'cocoa': {
+                'scientific_classification': {
+                    'scientific_name': 'Theobroma cacao',
+                    'family': 'Malvaceae',
+                    'genus': 'Theobroma',
+                    'species': 'cacao'
+                },
+                'ml_crop_type_id': 501,
+                
+                'genetic_groups': {
+                    'criollo': {
+                        'characteristics': 'fine_flavor',
+                        'pod_color': 'red_yellow',
+                        'bean_quality': 'premium',
+                        'disease_susceptibility': 'high'
+                    },
+                    'forastero': {
+                        'characteristics': 'bulk_cocoa',
+                        'pod_color': 'mainly_green',
+                        'productivity': 'high',
+                        'disease_resistance': 'better'
+                    },
+                    'trinitario': {
+                        'characteristics': 'hybrid_fine_bulk',
+                        'quality': 'intermediate_to_fine',
+                        'adaptation': 'wide',
+                        'breeding_importance': 'high'
+                    }
+                },
+                
+                'shade_requirements': {
+                    'natural_habitat': 'forest_understory',
+                    'shade_tolerance': 'high',
+                    'agroforestry_potential': 'excellent',
+                    'biodiversity_benefits': 'significant'
+                },
+                
+                'processing_quality_factors': {
+                    'bean_size': 'genetics_nutrition',
+                    'flavor_compounds': 'variety_processing',
+                    'fat_content': [50, 58],  # percent
+                    'fermentation_requirement': 'mandatory'
+                }
+            },
+            
+            'coffee': {
+                'genus': 'Coffea',
+                'family': 'Rubiaceae',
+                'ml_crop_type_id': 502,
+                
+                'commercial_species': {
+                    'arabica': {
+                        'scientific_name': 'Coffea arabica',
+                        'altitude_requirement': [800, 2000],  # meters
+                        'temperature_range': [15, 24],  # celsius
+                        'quality_potential': 'premium',
+                        'caffeine_content': [0.8, 1.4],  # percent
+                        'ml_species_id': 50201
+                    },
+                    'robusta': {
+                        'scientific_name': 'Coffea canephora',
+                        'altitude_tolerance': [0, 800],
+                        'temperature_range': [18, 36],
+                        'disease_resistance': 'superior',
+                        'caffeine_content': [1.7, 4.0],
+                        'ml_species_id': 50202
+                    }
+                },
+                
+                'processing_methods': {
+                    'wet_processing': {
+                        'quality_potential': 'highest',
+                        'water_requirements': 'high',
+                        'fermentation_involved': True
+                    },
+                    'dry_processing': {
+                        'water_requirements': 'minimal',
+                        'climate_suitability': 'dry_regions',
+                        'flavor_profile': 'full_body'
+                    },
+                    'honey_processing': {
+                        'characteristics': 'intermediate',
+                        'sweetness': 'enhanced',
+                        'processing_complexity': 'medium'
+                    }
+                }
+            }
+        }
+    },
+    
+    'crop_group_relationships': {
+        'rotation_compatibility': {
+            'beneficial_sequences': [
+                ['legumes', 'cereals'],
+                ['root_tubers', 'vegetables'],
+                ['cereals', 'legumes', 'root_tubers']
+            ],
+            'nutrient_cycling': 'nitrogen_fixation_utilization',
+            'pest_disease_break': 'host_specificity_disruption'
+        },
+        'intercropping_systems': {
+            'spatial_compatibility': {
+                'tree_crops_annuals': 'agroforestry_systems',
+                'cereals_legumes': 'complementary_resource_use',
+                'root_crops_vegetables': 'vertical_space_utilization'
+            }
+        }
+    },
+    
+    'ml_encoding_strategies': {
+        'hierarchical_encoding': {
+            'crop_group_level': 'one_hot_encoding',
+            'crop_type_level': 'ordinal_by_similarity',
+            'variety_level': 'embedding_vectors'
+        },
+        'feature_engineering': {
+            'physiological_traits': 'numerical_continuous',
+            'adaptation_characteristics': 'categorical_ordinal',
+            'resistance_profiles': 'binary_multi_label'
+        },
+        'similarity_metrics': {
+            'genetic_distance': 'phylogenetic_relationships',
+            'ecological_similarity': 'niche_overlap',
+            'management_similarity': 'input_requirement_patterns'
+        }
+    },
+    
+    'climate_change_adaptation': {
+        'stress_tolerance_prioritization': {
+            'drought_tolerance': 'increasing_priority',
+            'heat_tolerance': 'critical_future',
+            'flooding_tolerance': 'regional_importance',
+            'pest_disease_resistance': 'evolving_pressure'
+        },
+        'breeding_objectives': {
+            'climate_resilience': 'multi_stress_tolerance',
+            'nutritional_enhancement': 'food_security',
+            'resource_use_efficiency': 'sustainability'
+        }
+    }
+}

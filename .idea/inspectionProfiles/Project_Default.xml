@@ -1,0 +1,83 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="JSHint" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="affine" />
+          <option value="amqp" />
+          <option value="annotated-types" />
+          <option value="anyio" />
+          <option value="asgiref" />
+          <option value="attrs" />
+          <option value="billiard" />
+          <option value="blinker" />
+          <option value="celery" />
+          <option value="certifi" />
+          <option value="charset-normalizer" />
+          <option value="click" />
+          <option value="click-didyoumean" />
+          <option value="click-plugins" />
+          <option value="click-repl" />
+          <option value="cligj" />
+          <option value="deprecated" />
+          <option value="django" />
+          <option value="django-cors-headers" />
+          <option value="django-filter" />
+          <option value="djangorestframework" />
+          <option value="djangorestframework-gis" />
+          <option value="drf-yasg" />
+          <option value="flask" />
+          <option value="gdal" />
+          <option value="geos" />
+          <option value="h11" />
+          <option value="httpcore" />
+          <option value="httpx" />
+          <option value="hvac" />
+          <option value="idna" />
+          <option value="inflection" />
+          <option value="itsdangerous" />
+          <option value="jinja2" />
+          <option value="kombu" />
+          <option value="lxml" />
+          <option value="markupsafe" />
+          <option value="numpy" />
+          <option value="packaging" />
+          <option value="pillow" />
+          <option value="prompt-toolkit" />
+          <option value="psycopg2-binary" />
+          <option value="pydantic" />
+          <option value="pydantic-core" />
+          <option value="pyparsing" />
+          <option value="pyproj" />
+          <option value="python-consul" />
+          <option value="python-dateutil" />
+          <option value="python-dotenv" />
+          <option value="pytz" />
+          <option value="pyyaml" />
+          <option value="rasterio" />
+          <option value="requests" />
+          <option value="scipy" />
+          <option value="shapely" />
+          <option value="six" />
+          <option value="sniffio" />
+          <option value="sqlparse" />
+          <option value="svix" />
+          <option value="types-deprecated" />
+          <option value="types-python-dateutil" />
+          <option value="typing-extensions" />
+          <option value="typing-inspection" />
+          <option value="tzdata" />
+          <option value="uritemplate" />
+          <option value="urllib3" />
+          <option value="vine" />
+          <option value="wcwidth" />
+          <option value="werkzeug" />
+          <option value="wrapt" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

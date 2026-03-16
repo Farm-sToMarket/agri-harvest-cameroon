@@ -1,0 +1,203 @@
+remote_sensing_schema = {
+    'satellite_platforms': {
+        'sentinel_2': {
+            'spatial_resolution': {'multispectral': '10-20m', 'panchromatic': '10m'},
+            'temporal_resolution': '5_days',
+            'spectral_bands': {
+                'B01': {'name': 'Coastal aerosol', 'wavelength': '443nm', 'resolution': '60m'},
+                'B02': {'name': 'Blue', 'wavelength': '490nm', 'resolution': '10m'},
+                'B03': {'name': 'Green', 'wavelength': '560nm', 'resolution': '10m'},
+                'B04': {'name': 'Red', 'wavelength': '665nm', 'resolution': '10m'},
+                'B05': {'name': 'Red Edge 1', 'wavelength': '705nm', 'resolution': '20m'},
+                'B06': {'name': 'Red Edge 2', 'wavelength': '740nm', 'resolution': '20m'},
+                'B07': {'name': 'Red Edge 3', 'wavelength': '783nm', 'resolution': '20m'},
+                'B08': {'name': 'NIR', 'wavelength': '842nm', 'resolution': '10m'},
+                'B8A': {'name': 'Red Edge 4', 'wavelength': '865nm', 'resolution': '20m'},
+                'B09': {'name': 'Water vapour', 'wavelength': '945nm', 'resolution': '60m'},
+                'B11': {'name': 'SWIR 1', 'wavelength': '1610nm', 'resolution': '20m'},
+                'B12': {'name': 'SWIR 2', 'wavelength': '2190nm', 'resolution': '20m'}
+            }
+        },
+        'landsat_8_9': {
+            'spatial_resolution': '15-30m',
+            'temporal_resolution': '16_days',
+            'spectral_bands': {
+                'B1': {'name': 'Coastal/Aerosol', 'wavelength': '433-453nm'},
+                'B2': {'name': 'Blue', 'wavelength': '450-515nm'},
+                'B3': {'name': 'Green', 'wavelength': '525-600nm'},
+                'B4': {'name': 'Red', 'wavelength': '630-680nm'},
+                'B5': {'name': 'NIR', 'wavelength': '845-885nm'},
+                'B6': {'name': 'SWIR 1', 'wavelength': '1560-1660nm'},
+                'B7': {'name': 'SWIR 2', 'wavelength': '2100-2300nm'},
+                'B8': {'name': 'Panchromatic', 'wavelength': '500-680nm'},
+                'B9': {'name': 'Cirrus', 'wavelength': '1360-1390nm'},
+                'B10': {'name': 'TIRS 1', 'wavelength': '10600-11200nm'},
+                'B11': {'name': 'TIRS 2', 'wavelength': '11500-12500nm'}
+            }
+        },
+        'modis': {
+            'spatial_resolution': '250-1000m',
+            'temporal_resolution': '1-16_days',
+            'products': {
+                'MOD13Q1': 'Vegetation Indices 16-Day 250m',
+                'MOD15A2H': 'LAI/FPAR 8-Day 500m',
+                'MOD16A2': 'Evapotranspiration 8-Day 500m'
+            }
+        }
+    },
+    'vegetation_indices': {
+        'basic_indices': {
+            'ndvi': {
+                'formula': '(NIR - Red) / (NIR + Red)',
+                'range': [-1, 1],
+                'dtype': 'float32',
+                'significance': 'overall_vegetation_vigor',
+                'crop_applications': 'all_crops',
+                'optimal_range_by_crop': {
+                    'maize': [0.4, 0.9],
+                    'tomato': [0.3, 0.8],
+                    'potato': [0.4, 0.8],
+                    'lettuce': [0.2, 0.7]
+                }
+            },
+            'evi': {
+                'formula': '2.5 * (NIR - Red) / (NIR + 6*Red - 7.5*Blue + 1)',
+                'range': [-1, 1],
+                'dtype': 'float32',
+                'significance': 'enhanced_vegetation_response',
+                'advantages': 'reduced_atmospheric_soil_influence'
+            },
+            'savi': {
+                'formula': '(NIR - Red) / (NIR + Red + L) * (1 + L)',
+                'L_factor': 0.5,
+                'range': [-1, 1],
+                'significance': 'soil_adjusted_vegetation',
+                'best_for': 'sparse_vegetation_early_growth'
+            }
+        },
+        'red_edge_indices': {
+            'ndre': {
+                'formula': '(NIR - RedEdge) / (NIR + RedEdge)',
+                'range': [-1, 1],
+                'significance': 'chlorophyll_content',
+                'sensitive_to': 'nitrogen_status'
+            },
+            'ci_red_edge': {
+                'formula': '(RedEdge3 / RedEdge1) - 1',
+                'significance': 'chlorophyll_index',
+                'crop_applications': ['maize', 'tomato', 'potato']
+            },
+            'mcari': {
+                'formula': '((RedEdge1 - Red) - 0.2*(RedEdge1 - Green)) * (RedEdge1/Red)',
+                'significance': 'chlorophyll_absorption',
+                'resistant_to': 'leaf_area_variation'
+            }
+        },
+        'water_stress_indices': {
+            'ndwi': {
+                'formula': '(Green - NIR) / (Green + NIR)',
+                'range': [-1, 1],
+                'significance': 'vegetation_water_content',
+                'critical_values': {
+                    'water_stressed': '< -0.1',
+                    'well_watered': '> 0.1'
+                }
+            },
+            'msi': {
+                'formula': 'SWIR1 / NIR',
+                'range': [0, 3],
+                'significance': 'moisture_stress_index',
+                'interpretation': 'higher_values_indicate_stress'
+            },
+            'nmdi': {
+                'formula': '(NIR - (SWIR1 - SWIR2)) / (NIR + (SWIR1 - SWIR2))',
+                'range': [-1, 1],
+                'significance': 'normalized_multi_band_drought_index'
+            }
+        },
+        'biophysical_parameters': {
+            'lai': {
+                'name': 'Leaf Area Index',
+                'units': 'm2/m2',
+                'range': [0, 10],
+                'dtype': 'float32',
+                'significance': 'canopy_structure',
+                'crop_typical_values': {
+                    'maize': [0.5, 6.0],
+                    'tomato': [0.3, 4.0],
+                    'potato': [0.4, 5.0],
+                    'lettuce': [0.2, 3.0],
+                    'cassava': [0.5, 4.5]
+                },
+                'critical_stages': {
+                    'emergence': [0.1, 0.5],
+                    'vegetative': [1.0, 4.0],
+                    'reproductive': [3.0, 6.0],
+                    'senescence': [1.0, 3.0]
+                }
+            },
+            'fapar': {
+                'name': 'Fraction of Absorbed Photosynthetically Active Radiation',
+                'units': '1',
+                'range': [0, 1],
+                'significance': 'light_interception_efficiency',
+                'relationship_to_lai': 'exponential_saturation'
+            },
+            'fcover': {
+                'name': 'Fraction of Vegetation Cover',
+                'units': '1',
+                'range': [0, 1],
+                'significance': 'canopy_coverage',
+                'derived_from': 'spectral_mixture_analysis'
+            },
+            'cab': {
+                'name': 'Chlorophyll a+b Content',
+                'units': 'μg/cm2',
+                'range': [0, 100],
+                'significance': 'photosynthetic_capacity',
+                'stress_indicator': True
+            },
+            'cw': {
+                'name': 'Canopy Water Content',
+                'units': 'g/cm2',
+                'range': [0, 0.05],
+                'significance': 'vegetation_water_status',
+                'drought_monitoring': True
+            },
+            'canopy_temperature': {
+                'units': 'degree_celsius',
+                'source': 'thermal_bands',
+                'significance': 'stress_indicator',
+                'cwsi_calculation': 'crop_water_stress_index'
+            }
+        }
+    },
+    'quality_control': {
+        'cloud_detection': {
+            'cloud_mask': {
+                'dtype': 'uint8',
+                'values': {0: 'clear', 1: 'cloud', 2: 'cloud_shadow', 3: 'snow_ice'},
+                'algorithm': 'sen2cor_for_sentinel2'
+            },
+            'cloud_probability': {
+                'dtype': 'float32',
+                'range': [0, 100],
+                'units': 'percent',
+                'threshold_usable': 20
+            }
+        },
+        'atmospheric_correction': {
+            'surface_reflectance': {
+                'applied': True,
+                'algorithm': 'sen2cor_maja_lasrc',
+                'aerosol_optical_depth': 'included'
+            },
+            'adjacency_effects': 'corrected'
+        },
+        'geometric_correction': {
+            'geo_accuracy': '<10m',
+            'projection': 'UTM_WGS84',
+            'resampling_method': 'bilinear'
+        }
+    }
+}

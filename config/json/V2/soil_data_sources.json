@@ -1,0 +1,855 @@
+soil_data_schema_ml_optimized = {
+    'metadata': {
+        'version': '2.0.0',
+        'purpose': 'crop_yield_prediction',
+        'target_region': 'cameroon',
+        'coordinate_system': 'WGS84_UTM33N',
+        'quality_level': 'ml_ready'
+    },
+    
+    'spatial_identification': {
+        'field_id': {
+            'dtype': 'string',
+            'format': 'UUID',
+            'unique': True,
+            'required': True,
+            'description': 'Identifiant unique de la parcelle'
+        },
+        'coordinates': {
+            'latitude': {
+                'dtype': 'float64',
+                'units': 'degrees_north',
+                'precision': 6,
+                'valid_range': [1.6, 13.1],
+                'coordinate_system': 'WGS84',
+                'required': True
+            },
+            'longitude': {
+                'dtype': 'float64',
+                'units': 'degrees_east',
+                'precision': 6,
+                'valid_range': [8.3, 16.2],
+                'coordinate_system': 'WGS84',
+                'required': True
+            },
+            'elevation': {
+                'dtype': 'float32',
+                'units': 'm',
+                'valid_range': [0, 4095],
+                'source': 'SRTM_30m',
+                'required': True
+            },
+            'slope': {
+                'dtype': 'float32',
+                'units': 'degrees',
+                'valid_range': [0, 45],
+                'calculation': 'derived_from_DEM',
+                'significance': 'erosion_risk_water_flow'
+            },
+            'aspect': {
+                'dtype': 'float32',
+                'units': 'degrees',
+                'valid_range': [0, 360],
+                'reference': 'north_clockwise',
+                'significance': 'solar_radiation_exposure'
+            }
+        },
+        'field_characteristics': {
+            'field_area': {
+                'dtype': 'float32',
+                'units': 'hectares',
+                'valid_range': [0.01, 1000],
+                'required': True
+            },
+            'field_shape_complexity': {
+                'dtype': 'float32',
+                'calculation': 'perimeter_to_area_ratio',
+                'significance': 'management_uniformity'
+            },
+            'boundary_coordinates': {
+                'dtype': 'string',
+                'format': 'GeoJSON_polygon',
+                'coordinate_system': 'WGS84',
+                'required': True
+            }
+        }
+    },
+    
+    'temporal_framework': {
+        'sampling_metadata': {
+            'sampling_date': {
+                'dtype': 'datetime64[D]',
+                'required': True,
+                'timezone': 'Africa/Douala'
+            },
+            'sampling_season': {
+                'dtype': 'category',
+                'categories': ['dry_season', 'wet_season', 'transition'],
+                'derived_from': 'sampling_date'
+            },
+            'days_since_last_cultivation': {
+                'dtype': 'int16',
+                'units': 'days',
+                'valid_range': [0, 3650],
+                'significance': 'soil_disturbance_recovery'
+            },
+            'previous_crop': {
+                'dtype': 'string',
+                'categories': 'from_agricultural_taxonomy',
+                'significance': 'residual_nutrient_effects'
+            }
+        },
+        'temporal_validity': {
+            'analysis_validity_period': {
+                'dtype': 'int16',
+                'units': 'months',
+                'typical_range': [12, 36],
+                'depends_on': 'soil_property_type'
+            },
+            'next_recommended_analysis': {
+                'dtype': 'datetime64[D]',
+                'calculation': 'sampling_date + validity_period'
+            }
+        }
+    },
+    
+    'sampling_design': {
+        'sampling_strategy': {
+            'dtype': 'category',
+            'categories': ['systematic_grid', 'random_stratified', 'targeted_zones', 'composite'],
+            'required': True
+        },
+        'sampling_density': {
+            'dtype': 'float32',
+            'units': 'samples_per_hectare',
+            'recommended_range': [0.5, 5.0],
+            'depends_on': 'field_heterogeneity'
+        },
+        'sample_locations': {
+            'dtype': 'array',
+            'structure': 'list_of_coordinates',
+            'format': 'WGS84_decimal_degrees'
+        },
+        'spatial_variability': {
+            'coefficient_of_variation': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'calculation': 'std_dev / mean * 100',
+                'significance': 'field_uniformity_indicator'
+            },
+            'spatial_autocorrelation': {
+                'dtype': 'float32',
+                'range': [-1, 1],
+                'method': 'morans_i',
+                'significance': 'spatial_pattern_strength'
+            }
+        }
+    },
+    
+    'physical_properties': {
+        'texture': {
+            'sand_percentage': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'size_range': '0.05-2.0_mm',
+                'measurement_method': 'laser_diffraction_or_sieve',
+                'prediction_importance': 'high',
+                'ml_encoding': 'continuous'
+            },
+            'silt_percentage': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'size_range': '0.002-0.05_mm',
+                'measurement_method': 'laser_diffraction_or_hydrometer',
+                'prediction_importance': 'high',
+                'ml_encoding': 'continuous'
+            },
+            'clay_percentage': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'size_range': '<0.002_mm',
+                'constraint': 'sand + silt + clay = 100',
+                'prediction_importance': 'high',
+                'ml_encoding': 'continuous'
+            },
+            'texture_class': {
+                'dtype': 'category',
+                'categories': [
+                    'sand', 'loamy_sand', 'sandy_loam', 'loam',
+                    'silt_loam', 'silt', 'sandy_clay_loam',
+                    'clay_loam', 'silty_clay_loam', 'sandy_clay',
+                    'silty_clay', 'clay'
+                ],
+                'classification_system': 'USDA',
+                'derived_from': ['sand_percentage', 'silt_percentage', 'clay_percentage'],
+                'ml_encoding': 'ordinal_by_water_holding_capacity'
+            },
+            'texture_quality_score': {
+                'dtype': 'float32',
+                'range': [0, 1],
+                'calculation': 'weighted_suitability_by_crop',
+                'crop_specific': True
+            }
+        },
+        
+        'structure_and_density': {
+            'bulk_density': {
+                'dtype': 'float32',
+                'units': 'g/cm3',
+                'valid_range': [0.8, 2.0],
+                'measurement_depths': ['0-10cm', '10-20cm', '20-30cm', '30-50cm'],
+                'compaction_thresholds': {
+                    'sandy_soils': 1.6,
+                    'clayey_soils': 1.4,
+                    'loamy_soils': 1.5
+                },
+                'prediction_importance': 'high',
+                'ml_encoding': 'continuous_with_thresholds'
+            },
+            'porosity': {
+                'total_porosity': {
+                    'dtype': 'float32',
+                    'units': 'percent',
+                    'valid_range': [20, 70],
+                    'calculation': '(1 - bulk_density/particle_density) * 100',
+                    'particle_density_assumed': 2.65
+                },
+                'macroporosity': {
+                    'dtype': 'float32',
+                    'units': 'percent',
+                    'measurement_method': 'water_retention_at_10kPa',
+                    'significance': 'aeration_drainage'
+                },
+                'microporosity': {
+                    'dtype': 'float32',
+                    'units': 'percent',
+                    'calculation': 'total_porosity - macroporosity',
+                    'significance': 'water_storage'
+                }
+            },
+            'aggregate_stability': {
+                'wet_sieving_stability': {
+                    'dtype': 'float32',
+                    'units': 'percent',
+                    'valid_range': [0, 100],
+                    'size_class': '>0.25mm',
+                    'method': 'yoder_wet_sieving'
+                },
+                'structural_stability_index': {
+                    'dtype': 'float32',
+                    'range': [0, 1],
+                    'calculation': 'composite_stability_metric',
+                    'factors': ['aggregate_stability', 'organic_matter', 'clay_content']
+                }
+            }
+        },
+        
+        'water_properties': {
+            'water_retention': {
+                'field_capacity': {
+                    'dtype': 'float32',
+                    'units': 'cm3/cm3',
+                    'valid_range': [0.05, 0.60],
+                    'pressure': '-33_kPa',
+                    'measurement_method': 'pressure_plate_or_pedotransfer',
+                    'prediction_importance': 'very_high',
+                    'ml_encoding': 'continuous'
+                },
+                'wilting_point': {
+                    'dtype': 'float32',
+                    'units': 'cm3/cm3',
+                    'valid_range': [0.02, 0.40],
+                    'pressure': '-1500_kPa',
+                    'measurement_method': 'pressure_plate_or_pedotransfer',
+                    'prediction_importance': 'very_high',
+                    'ml_encoding': 'continuous'
+                },
+                'available_water_capacity': {
+                    'dtype': 'float32',
+                    'units': 'cm3/cm3',
+                    'calculation': 'field_capacity - wilting_point',
+                    'significance': 'plant_available_water',
+                    'crop_critical_thresholds': {
+                        'maize': 0.12,
+                        'tomato': 0.15,
+                        'potato': 0.18,
+                        'cassava': 0.08
+                    }
+                },
+                'water_retention_curve_parameters': {
+                    'van_genuchten_alpha': {
+                        'dtype': 'float32',
+                        'units': '1/cm',
+                        'fitted_parameter': True
+                    },
+                    'van_genuchten_n': {
+                        'dtype': 'float32',
+                        'units': 'dimensionless',
+                        'fitted_parameter': True
+                    }
+                }
+            },
+            'hydraulic_properties': {
+                'saturated_hydraulic_conductivity': {
+                    'dtype': 'float32',
+                    'units': 'cm/hour',
+                    'valid_range': [0.01, 100],
+                    'measurement_method': 'constant_head_permeameter',
+                    'log_transformation_recommended': True
+                },
+                'infiltration_rate': {
+                    'initial_infiltration_rate': {
+                        'dtype': 'float32',
+                        'units': 'mm/hour',
+                        'measurement_method': 'double_ring_infiltrometer'
+                    },
+                    'steady_state_infiltration': {
+                        'dtype': 'float32',
+                        'units': 'mm/hour',
+                        'significance': 'long_term_water_acceptance'
+                    }
+                },
+                'drainage_class': {
+                    'dtype': 'category',
+                    'categories': ['very_poor', 'poor', 'imperfect', 'moderate', 'good', 'excessive'],
+                    'crop_suitability_implications': True,
+                    'ml_encoding': 'ordinal'
+                }
+            }
+        }
+    },
+    
+    'chemical_properties': {
+        'ph_and_acidity': {
+            'ph_water': {
+                'dtype': 'float32',
+                'units': '1',
+                'valid_range': [3.5, 9.5],
+                'method': 'water_1:2.5_ratio',
+                'standard': 'ISO_10390',
+                'prediction_importance': 'very_high',
+                'crop_optimal_ranges': {
+                    'maize': [6.0, 7.0],
+                    'tomato': [6.0, 6.8],
+                    'potato': [5.2, 6.5],
+                    'cassava': [5.5, 7.0]
+                }
+            },
+            'ph_kcl': {
+                'dtype': 'float32',
+                'units': '1',
+                'valid_range': [3.0, 8.5],
+                'method': 'kcl_1M_1:2.5_ratio',
+                'significance': 'exchangeable_acidity'
+            },
+            'ph_buffer_capacity': {
+                'dtype': 'float32',
+                'units': 'cmol/kg/pH_unit',
+                'measurement_method': 'lime_requirement_test',
+                'significance': 'pH_modification_resistance'
+            },
+            'acidity_indicators': {
+                'exchangeable_acidity': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg',
+                    'extraction_method': 'kcl_1M'
+                },
+                'aluminum_saturation': {
+                    'dtype': 'float32',
+                    'units': 'percent',
+                    'valid_range': [0, 80],
+                    'toxicity_threshold': 20,
+                    'crop_tolerance_levels': {
+                        'rice': 'high',
+                        'maize': 'low',
+                        'cassava': 'medium'
+                    }
+                }
+            }
+        },
+        
+        'organic_matter_and_carbon': {
+            'organic_carbon': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0.1, 10.0],
+                'measurement_methods': ['walkley_black', 'dry_combustion'],
+                'preferred_method': 'dry_combustion',
+                'prediction_importance': 'very_high',
+                'quality_classes': {
+                    'very_low': [0, 0.5],
+                    'low': [0.5, 1.0],
+                    'medium': [1.0, 2.0],
+                    'high': [2.0, 4.0],
+                    'very_high': [4.0, 10.0]
+                }
+            },
+            'organic_matter': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0.2, 15.0],
+                'calculation': 'organic_carbon * 1.724',
+                'van_bemmelen_factor': 1.724
+            },
+            'total_nitrogen': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0.01, 1.0],
+                'measurement_method': 'dry_combustion_or_kjeldahl',
+                'prediction_importance': 'high'
+            },
+            'c_n_ratio': {
+                'dtype': 'float32',
+                'units': '1',
+                'valid_range': [5, 50],
+                'calculation': 'organic_carbon / total_nitrogen',
+                'optimal_range': [8, 15],
+                'decomposition_implications': True
+            },
+            'particulate_organic_matter': {
+                'dtype': 'float32',
+                'units': 'g/kg',
+                'size_fraction': '53-2000_micrometers',
+                'significance': 'labile_organic_fraction'
+            },
+            'soil_organic_matter_quality_index': {
+                'dtype': 'float32',
+                'range': [0, 1],
+                'calculation': 'composite_som_quality_metric',
+                'factors': ['organic_carbon', 'c_n_ratio', 'particulate_om']
+            }
+        },
+        
+        'macronutrients': {
+            'nitrogen': {
+                'total_nitrogen': {
+                    'dtype': 'float32',
+                    'units': 'percent',
+                    'method': 'dry_combustion'
+                },
+                'available_nitrogen': {
+                    'nitrate_nitrogen': {
+                        'dtype': 'float32',
+                        'units': 'mg/kg',
+                        'extraction_method': 'kcl_extraction',
+                        'seasonal_variability': 'high'
+                    },
+                    'ammonium_nitrogen': {
+                        'dtype': 'float32',
+                        'units': 'mg/kg',
+                        'extraction_method': 'kcl_extraction',
+                        'seasonal_variability': 'high'
+                    },
+                    'mineralizable_nitrogen': {
+                        'dtype': 'float32',
+                        'units': 'mg/kg',
+                        'method': 'aerobic_incubation_7_days',
+                        'significance': 'nitrogen_supply_potential'
+                    }
+                },
+                'nitrogen_availability_index': {
+                    'dtype': 'float32',
+                    'range': [0, 1],
+                    'calculation': 'weighted_available_forms',
+                    'crop_specific_weights': True
+                }
+            },
+            'phosphorus': {
+                'available_phosphorus': {
+                    'bray_p1': {
+                        'dtype': 'float32',
+                        'units': 'mg/kg',
+                        'extraction_method': 'bray_p1',
+                        'soil_ph_range': [5.0, 6.5]
+                    },
+                    'olsen_p': {
+                        'dtype': 'float32',
+                        'units': 'mg/kg',
+                        'extraction_method': 'olsen',
+                        'soil_ph_range': [6.5, 8.5]
+                    },
+                    'mehlich3_p': {
+                        'dtype': 'float32',
+                        'units': 'mg/kg',
+                        'extraction_method': 'mehlich_3',
+                        'universal_extractant': True
+                    }
+                },
+                'phosphorus_critical_levels': {
+                    'dtype': 'dict',
+                    'crop_specific': {
+                        'maize': {'low': 10, 'medium': 25, 'high': 40},
+                        'tomato': {'low': 15, 'medium': 35, 'high': 60},
+                        'potato': {'low': 20, 'medium': 40, 'high': 70}
+                    }
+                },
+                'phosphorus_sorption_capacity': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'method': 'langmuir_isotherm',
+                    'significance': 'p_fixation_potential'
+                }
+            },
+            'potassium': {
+                'exchangeable_potassium': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg',
+                    'valid_range': [0.05, 3.0],
+                    'extraction_method': 'ammonium_acetate_ph7',
+                    'prediction_importance': 'high'
+                },
+                'non_exchangeable_potassium': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg',
+                    'extraction_method': 'nitric_acid_boiling',
+                    'significance': 'medium_term_k_supply'
+                },
+                'potassium_buffer_capacity': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg/(mol/L)^0.5',
+                    'significance': 'k_release_depletion_rate'
+                }
+            }
+        },
+        
+        'secondary_nutrients': {
+            'calcium': {
+                'exchangeable_calcium': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg',
+                    'valid_range': [0.5, 25.0],
+                    'extraction_method': 'ammonium_acetate_ph7'
+                }
+            },
+            'magnesium': {
+                'exchangeable_magnesium': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg',
+                    'valid_range': [0.1, 8.0],
+                    'extraction_method': 'ammonium_acetate_ph7'
+                }
+            },
+            'sulfur': {
+                'available_sulfur': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'valid_range': [2, 50],
+                    'extraction_method': 'calcium_phosphate_0.008M'
+                }
+            }
+        },
+        
+        'exchange_complex': {
+            'cation_exchange_capacity': {
+                'effective_cec': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg',
+                    'method': 'sum_of_exchangeable_cations',
+                    'significance': 'actual_cec_at_field_ph'
+                },
+                'potential_cec': {
+                    'dtype': 'float32',
+                    'units': 'cmol/kg',
+                    'method': 'ammonium_acetate_ph7',
+                    'significance': 'maximum_cec_at_ph7'
+                }
+            },
+            'base_saturation': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [10, 100],
+                'calculation': '(Ca + Mg + K + Na) / CEC * 100',
+                'fertility_indicator': True,
+                'optimal_ranges': {
+                    'acidic_soils': [50, 70],
+                    'neutral_soils': [70, 85],
+                    'alkaline_soils': [85, 95]
+                }
+            },
+            'cation_ratios': {
+                'ca_mg_ratio': {
+                    'dtype': 'float32',
+                    'optimal_range': [2, 6],
+                    'calculation': 'Ca_meq / Mg_meq'
+                },
+                'mg_k_ratio': {
+                    'dtype': 'float32',
+                    'optimal_range': [6, 12],
+                    'calculation': 'Mg_meq / K_meq'
+                }
+            }
+        },
+        
+        'micronutrients': {
+            'extractable_micronutrients': {
+                'iron': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'valid_range': [1, 100],
+                    'extraction_method': 'dtpa',
+                    'deficiency_threshold': 4.5,
+                    'crop_critical_levels': {
+                        'rice': 10,
+                        'maize': 4.5,
+                        'tomato': 6
+                    }
+                },
+                'manganese': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'valid_range': [0.5, 50],
+                    'extraction_method': 'dtpa',
+                    'deficiency_threshold': 1.0
+                },
+                'zinc': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'valid_range': [0.1, 20],
+                    'extraction_method': 'dtpa',
+                    'deficiency_threshold': 0.5,
+                    'prediction_importance': 'medium_high'
+                },
+                'copper': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'valid_range': [0.1, 10],
+                    'extraction_method': 'dtpa',
+                    'deficiency_threshold': 0.2
+                },
+                'boron': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'valid_range': [0.1, 5],
+                    'extraction_method': 'hot_water',
+                    'deficiency_threshold': 0.5,
+                    'toxicity_threshold': 2.0
+                }
+            },
+            'micronutrient_availability_index': {
+                'dtype': 'float32',
+                'range': [0, 1],
+                'calculation': 'weighted_availability_score',
+                'ph_dependency': True
+            }
+        }
+    },
+    
+    'biological_properties': {
+        'microbial_activity': {
+            'soil_respiration': {
+                'dtype': 'float32',
+                'units': 'mg_CO2/kg/day',
+                'measurement_method': 'alkali_trap_or_IR_analyzer',
+                'significance': 'microbial_activity_indicator'
+            },
+            'microbial_biomass_carbon': {
+                'dtype': 'float32',
+                'units': 'mg/kg',
+                'method': 'chloroform_fumigation_extraction',
+                'significance': 'living_microbial_pool_size'
+            },
+            'enzymatic_activity': {
+                'dehydrogenase_activity': {
+                    'dtype': 'float32',
+                    'units': 'μg_TPF/g/h',
+                    'significance': 'overall_microbial_activity'
+                },
+                'phosphatase_activity': {
+                    'dtype': 'float32',
+                    'units': 'μg_pNP/g/h',
+                    'significance': 'phosphorus_mineralization_potential'
+                }
+            }
+        },
+        'biological_quality_indicators': {
+            'earthworm_count': {
+                'dtype': 'int16',
+                'units': 'individuals/m2',
+                'sampling_method': 'mustard_extraction_or_handsorting',
+                'significance': 'soil_structure_organic_matter'
+            },
+            'nematode_community': {
+                'total_nematodes': {
+                    'dtype': 'int32',
+                    'units': 'individuals/100g_soil'
+                },
+                'beneficial_predator_ratio': {
+                    'dtype': 'float32',
+                    'range': [0, 1],
+                    'significance': 'soil_food_web_health'
+                }
+            }
+        }
+    },
+    
+    'environmental_stress_indicators': {
+        'salinity': {
+            'electrical_conductivity': {
+                'dtype': 'float32',
+                'units': 'dS/m',
+                'measurement_method': 'saturated_paste_extract',
+                'salinity_classes': {
+                    'non_saline': [0, 2],
+                    'slightly_saline': [2, 4],
+                    'moderately_saline': [4, 8],
+                    'strongly_saline': [8, 16],
+                    'very_strongly_saline': [16, 999]
+                }
+            },
+            'sodium_adsorption_ratio': {
+                'dtype': 'float32',
+                'calculation': 'Na / sqrt((Ca + Mg)/2)',
+                'sodicity_classes': {
+                    'non_sodic': [0, 13],
+                    'slightly_sodic': [13, 25],
+                    'moderately_sodic': [25, 40],
+                    'strongly_sodic': [40, 999]
+                }
+            }
+        },
+        'contamination_indicators': {
+            'heavy_metals': {
+                'lead': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'extraction_method': 'dtpa_or_total_digestion',
+                    'toxicity_thresholds': 'crop_specific'
+                },
+                'cadmium': {
+                    'dtype': 'float32',
+                    'units': 'mg/kg',
+                    'bioaccumulation_concern': True
+                }
+            }
+        }
+    },
+    
+    'derived_soil_quality_indices': {
+        'soil_fertility_index': {
+            'dtype': 'float32',
+            'range': [0, 1],
+            'calculation': 'weighted_fertility_parameters',
+            'weights': {
+                'ph': 0.15,
+                'organic_matter': 0.20,
+                'available_p': 0.15,
+                'exchangeable_k': 0.15,
+                'cec': 0.10,
+                'base_saturation': 0.10,
+                'available_water_capacity': 0.15
+            },
+            'crop_specific_adjustments': True
+        },
+        'soil_health_index': {
+            'dtype': 'float32',
+            'range': [0, 1],
+            'calculation': 'composite_health_metric',
+            'components': {
+                'chemical': 0.4,
+                'physical': 0.4,
+                'biological': 0.2
+            }
+        },
+        'soil_productivity_potential': {
+            'dtype': 'float32',
+            'range': [0, 1],
+            'crop_specific': True,
+            'includes_limitations': True,
+            'limiting_factors': [
+                'drainage', 'ph', 'salinity', 'nutrient_deficiency',
+                'compaction', 'erosion_risk'
+            ]
+        }
+    },
+    
+            'quality_control': {
+        'data_quality_flags': {
+            'sampling_quality': {
+                'dtype': 'int8',
+                'flag_values': [0, 1, 2, 3],
+                'flag_meanings': 'good questionable poor invalid'
+            },
+            'analysis_quality': {
+                'dtype': 'int8',
+                'flag_values': [0, 1, 2, 3],
+                'flag_meanings': 'standard_method modified_method estimated missing'
+            },
+            'temporal_validity': {
+                'dtype': 'int8',
+                'flag_values': [0, 1, 2],
+                'flag_meanings': 'current outdated_but_usable obsolete'
+            }
+        },
+        'uncertainty_quantification': {
+            'measurement_uncertainty': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'method': 'analytical_uncertainty_propagation'
+            },
+            'spatial_uncertainty': {
+                'dtype': 'float32',
+                'units': 'coefficient_of_variation',
+                'based_on': 'field_sampling_variability'
+            }
+        },
+        'data_lineage': {
+            'laboratory_id': {
+                'dtype': 'string',
+                'accreditation_status': 'required'
+            },
+            'analysis_date': {
+                'dtype': 'datetime64[D]',
+                'required': True
+            },
+            'analyst_id': {
+                'dtype': 'string',
+                'anonymized': True
+            },
+            'equipment_calibration_date': {
+                'dtype': 'datetime64[D]'
+            }
+        }
+    },
+    
+    'ml_optimization': {
+        'feature_engineering': {
+            'interaction_terms': [
+                'ph_x_organic_matter',
+                'clay_x_cec',
+                'sand_x_infiltration_rate',
+                'organic_carbon_x_total_nitrogen'
+            ],
+            'derived_ratios': [
+                'available_water_capacity_per_clay',
+                'cec_per_organic_matter',
+                'base_saturation_x_ph_buffer'
+            ],
+            'polynomial_features': {
+                'ph_squared': 'for_ph_optima_curves',
+                'organic_matter_log': 'for_diminishing_returns'
+            }
+        },
+        'normalization_parameters': {
+            'standardization_method': 'robust_scaler',
+            'outlier_treatment': 'iqr_method',
+            'missing_value_strategy': 'iterative_imputer'
+        },
+        'target_variable_relationships': {
+            'yield_limiting_factors': [
+                'available_water_capacity',
+                'ph_optimality_distance',
+                'nutrient_deficiency_score',
+                'compaction_risk_index'
+            ],
+            'yield_enhancing_factors': [
+                'soil_fertility_index',
+                'organic_matter_quality',
+                'nutrient_balance_score'
+            ]
+        }
+    }
+}
+        

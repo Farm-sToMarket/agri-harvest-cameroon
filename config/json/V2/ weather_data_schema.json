@@ -1,0 +1,891 @@
+weather_data_schema_ml_optimized = {
+    'metadata': {
+        'version': '2.0.0',
+        'purpose': 'crop_yield_prediction',
+        'target_region': 'cameroon',
+        'coordinate_system': 'WGS84',
+        'temporal_resolution': 'daily_hourly_hybrid',
+        'quality_level': 'ml_ready'
+    },
+    
+    'spatial_framework': {
+        'station_identification': {
+            'station_id': {
+                'dtype': 'string',
+                'format': 'UUID',
+                'unique': True,
+                'required': True
+            },
+            'station_name': {
+                'dtype': 'string',
+                'required': True
+            },
+            'coordinates': {
+                'latitude': {
+                    'dtype': 'float64',
+                    'units': 'degrees_north',
+                    'precision': 6,
+                    'valid_range': [1.6, 13.1],
+                    'required': True
+                },
+                'longitude': {
+                    'dtype': 'float64',
+                    'units': 'degrees_east',
+                    'precision': 6,
+                    'valid_range': [8.3, 16.2],
+                    'required': True
+                },
+                'elevation': {
+                    'dtype': 'float32',
+                    'units': 'm',
+                    'valid_range': [0, 4095],
+                    'accuracy': '±10m',
+                    'required': True
+                }
+            },
+            'station_characteristics': {
+                'station_type': {
+                    'dtype': 'category',
+                    'categories': ['automatic', 'manual', 'hybrid', 'satellite_derived'],
+                    'quality_implications': True
+                },
+                'measurement_height': {
+                    'temperature_humidity': {
+                        'dtype': 'float32',
+                        'units': 'm',
+                        'standard_height': 2.0,
+                        'tolerance': 0.5
+                    },
+                    'wind': {
+                        'dtype': 'float32',
+                        'units': 'm',
+                        'standard_height': 10.0,
+                        'tolerance': 2.0
+                    },
+                    'precipitation': {
+                        'dtype': 'float32',
+                        'units': 'm',
+                        'standard_height': 1.5,
+                        'gauge_type': 'tipping_bucket_or_weighing'
+                    }
+                },
+                'surrounding_environment': {
+                    'dtype': 'category',
+                    'categories': ['rural_open', 'rural_forest', 'peri_urban', 'urban'],
+                    'microclimate_effects': True
+                },
+                'data_availability_period': {
+                    'start_date': 'datetime64[D]',
+                    'end_date': 'datetime64[D]',
+                    'completeness_percentage': 'float32'
+                }
+            }
+        },
+        'spatial_interpolation': {
+            'interpolation_method': {
+                'dtype': 'category',
+                'categories': ['idw', 'kriging', 'spline', 'reanalysis_blend'],
+                'variable_specific': True
+            },
+            'influence_radius': {
+                'dtype': 'float32',
+                'units': 'km',
+                'variable_dependent': True,
+                'topographic_adjustment': True
+            },
+            'elevation_correction': {
+                'temperature_lapse_rate': {
+                    'dtype': 'float32',
+                    'units': 'degrees_C/1000m',
+                    'typical_range': [4.0, 8.0],
+                    'seasonal_variation': True
+                },
+                'precipitation_gradient': {
+                    'dtype': 'float32',
+                    'units': 'percent_per_1000m',
+                    'orographic_enhancement': True
+                }
+            }
+        }
+    },
+    
+    'temporal_framework': {
+        'time_reference': {
+            'date': {
+                'dtype': 'datetime64[D]',
+                'format': 'YYYY-MM-DD',
+                'timezone': 'Africa/Douala',
+                'required': True
+            },
+            'time_utc': {
+                'dtype': 'datetime64[h]',
+                'format': 'HH:MM',
+                'for_subdaily_data': True
+            },
+            'day_of_year': {
+                'dtype': 'int16',
+                'range': [1, 366],
+                'derived_from': 'date',
+                'seasonal_analysis': True
+            },
+            'agricultural_day': {
+                'dtype': 'int16',
+                'calculation': 'days_since_season_start',
+                'crop_specific': True,
+                'significance': 'phenological_alignment'
+            }
+        },
+        'temporal_aggregation': {
+            'daily_from_hourly': {
+                'method': 'standard_aggregation_rules',
+                'temperature': 'mean_min_max',
+                'precipitation': 'sum',
+                'humidity': 'mean',
+                'radiation': 'sum',
+                'wind': 'mean_max'
+            },
+            'weekly_monthly_aggregation': {
+                'availability': True,
+                'crop_growth_stage_alignment': True
+            }
+        },
+        'data_completeness': {
+            'daily_completeness': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'threshold_usable': 80
+            },
+            'gap_length_max': {
+                'dtype': 'int16',
+                'units': 'consecutive_days',
+                'interpolation_limit': 5
+            }
+        }
+    },
+    
+    'temperature_variables': {
+        'air_temperature': {
+            'temperature_min_daily': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'valid_range': [-5, 45],
+                'precision': 0.1,
+                'measurement_height': '2m',
+                'measurement_time': 'dawn_typically_0600',
+                'prediction_importance': 'very_high',
+                'crop_critical_thresholds': {
+                    'frost_damage': 0,
+                    'growth_cessation': 10,
+                    'stress_threshold': 35
+                }
+            },
+            'temperature_max_daily': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'valid_range': [10, 50],
+                'precision': 0.1,
+                'measurement_height': '2m',
+                'measurement_time': 'afternoon_typically_1400',
+                'prediction_importance': 'very_high',
+                'crop_stress_thresholds': {
+                    'heat_stress_mild': 32,
+                    'heat_stress_severe': 38,
+                    'damage_threshold': 42
+                }
+            },
+            'temperature_mean_daily': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'valid_range': [5, 40],
+                'calculation': '(temp_min + temp_max) / 2',
+                'alternative_calculation': '24h_hourly_mean',
+                'prediction_importance': 'very_high'
+            },
+            'diurnal_temperature_range': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'calculation': 'temp_max - temp_min',
+                'significance': 'plant_stress_indicator',
+                'typical_range_by_season': {
+                    'dry_season': [12, 18],
+                    'wet_season': [8, 12]
+                }
+            }
+        },
+        'soil_temperature': {
+            'soil_temp_5cm': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'measurement_depth': '5cm',
+                'bare_soil_conditions': True,
+                'significance': 'seed_germination_root_growth'
+            },
+            'soil_temp_10cm': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'measurement_depth': '10cm',
+                'prediction_importance': 'medium'
+            },
+            'soil_temp_20cm': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'measurement_depth': '20cm',
+                'significance': 'root_zone_activity'
+            }
+        },
+        'temperature_indices': {
+            'growing_degree_days': {
+                'gdd_base_10': {
+                    'dtype': 'float32',
+                    'units': 'degree_days',
+                    'base_temperature': 10,
+                    'calculation': 'max(0, temp_mean - base_temp)',
+                    'cumulative': True,
+                    'crop_applications': ['maize', 'sorghum', 'millet']
+                },
+                'gdd_base_5': {
+                    'dtype': 'float32',
+                    'units': 'degree_days',
+                    'base_temperature': 5,
+                    'crop_applications': ['potato', 'cool_season_vegetables']
+                },
+                'gdd_base_15': {
+                    'dtype': 'float32',
+                    'units': 'degree_days',
+                    'base_temperature': 15,
+                    'crop_applications': ['tomato', 'pepper', 'warm_season_crops']
+                }
+            },
+            'cooling_degree_days': {
+                'dtype': 'float32',
+                'units': 'degree_days',
+                'base_temperature': 26,
+                'calculation': 'max(0, temp_mean - 26)',
+                'significance': 'cooling_energy_demand'
+            },
+            'heat_stress_index': {
+                'dtype': 'float32',
+                'calculation': 'cumulative_hours_above_threshold',
+                'thresholds': [30, 35, 40],
+                'crop_specific_damage': True
+            }
+        }
+    },
+    
+    'precipitation_variables': {
+        'rainfall_measurements': {
+            'precipitation_daily': {
+                'dtype': 'float32',
+                'units': 'mm',
+                'valid_range': [0, 500],
+                'precision': 0.1,
+                'accumulation_period': '24h_0900_to_0900',
+                'prediction_importance': 'very_high',
+                'trace_threshold': 0.1
+            },
+            'precipitation_intensity_max': {
+                'dtype': 'float32',
+                'units': 'mm/hour',
+                'valid_range': [0, 200],
+                'measurement_interval': '5_minutes',
+                'erosion_significance': True
+            },
+            'precipitation_duration': {
+                'dtype': 'float32',
+                'units': 'hours',
+                'significance': 'infiltration_runoff_patterns'
+            }
+        },
+        'precipitation_patterns': {
+            'wet_days_count': {
+                'dtype': 'int16',
+                'units': 'days_per_month',
+                'threshold': 1.0,  # mm
+                'seasonal_analysis': True
+            },
+            'dry_spell_length': {
+                'current_dry_spell': {
+                    'dtype': 'int16',
+                    'units': 'consecutive_days',
+                    'threshold': 1.0,  # mm
+                    'drought_indicator': True
+                },
+                'longest_dry_spell_season': {
+                    'dtype': 'int16',
+                    'units': 'days',
+                    'seasonal_maximum': True
+                }
+            },
+            'precipitation_distribution': {
+                'coefficient_variation': {
+                    'dtype': 'float32',
+                    'calculation': 'std_dev / mean',
+                    'temporal_window': 'monthly_seasonal'
+                },
+                'concentration_index': {
+                    'dtype': 'float32',
+                    'range': [0, 1],
+                    'significance': 'rainfall_evenness'
+                }
+            }
+        },
+        'precipitation_types': {
+            'precipitation_type': {
+                'dtype': 'category',
+                'categories': ['rain', 'drizzle', 'shower', 'thunderstorm', 'hail'],
+                'intensity_related': True,
+                'crop_damage_implications': True
+            },
+            'storm_characteristics': {
+                'thunder_occurrence': {
+                    'dtype': 'bool',
+                    'hail_risk_indicator': True
+                },
+                'wind_with_precipitation': {
+                    'dtype': 'float32',
+                    'units': 'm/s',
+                    'storm_damage_potential': True
+                }
+            }
+        }
+    },
+    
+    'humidity_and_vapor_variables': {
+        'relative_humidity': {
+            'rh_daily_mean': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'valid_range': [0, 100],
+                'precision': 1,
+                'measurement_height': '2m'
+            },
+            'rh_morning': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'measurement_time': '0600_local',
+                'disease_risk_significance': True
+            },
+            'rh_afternoon': {
+                'dtype': 'float32',
+                'units': 'percent',
+                'measurement_time': '1400_local',
+                'evapotranspiration_significance': True
+            }
+        },
+        'vapor_pressure': {
+            'actual_vapor_pressure': {
+                'dtype': 'float32',
+                'units': 'kPa',
+                'calculation': 'from_rh_and_temperature',
+                'et_calculation_input': True
+            },
+            'saturation_vapor_pressure': {
+                'dtype': 'float32',
+                'units': 'kPa',
+                'calculation': 'murray_equation',
+                'temperature_dependent': True
+            },
+            'vapor_pressure_deficit': {
+                'dtype': 'float32',
+                'units': 'kPa',
+                'calculation': 'sat_vp - actual_vp',
+                'prediction_importance': 'high',
+                'plant_stress_indicator': True,
+                'crop_critical_values': {
+                    'stress_threshold': 2.0,
+                    'severe_stress': 4.0
+                }
+            }
+        },
+        'humidity_indices': {
+            'morning_dew_indicator': {
+                'dtype': 'float32',
+                'calculation': 'rh_morning_above_90_percent',
+                'disease_risk_factor': True
+            },
+            'atmospheric_dryness_index': {
+                'dtype': 'float32',
+                'range': [0, 1],
+                'calculation': 'vpd_based_dryness_metric',
+                'drought_stress_indicator': True
+            }
+        }
+    },
+    
+    'radiation_and_sunshine': {
+        'solar_radiation': {
+            'global_solar_radiation': {
+                'dtype': 'float32',
+                'units': 'MJ/m2/day',
+                'valid_range': [0, 35],
+                'measurement_type': 'pyranometer',
+                'prediction_importance': 'very_high',
+                'photosynthesis_driver': True
+            },
+            'photoperiod': {
+                'dtype': 'float32',
+                'units': 'hours',
+                'calculation': 'astronomical_daylight_hours',
+                'latitude_dependent': True,
+                'photoperiod_sensitive_crops': ['rice', 'maize']
+            },
+            'daily_light_integral': {
+                'dtype': 'float32',
+                'units': 'mol/m2/day',
+                'calculation': 'par_integrated_over_day',
+                'significance': 'photosynthetic_potential'
+            }
+        },
+        'sunshine_duration': {
+            'sunshine_hours': {
+                'dtype': 'float32',
+                'units': 'hours',
+                'valid_range': [0, 14],
+                'measurement_method': 'campbell_stokes_or_sunshine_sensor'
+            },
+            'sunshine_fraction': {
+                'dtype': 'float32',
+                'range': [0, 1],
+                'calculation': 'sunshine_hours / daylight_hours',
+                'cloud_cover_indicator': True
+            }
+        },
+        'radiation_derived_indices': {
+            'clear_sky_index': {
+                'dtype': 'float32',
+                'range': [0, 1],
+                'calculation': 'measured_radiation / clear_sky_radiation',
+                'cloud_variability_indicator': True
+            },
+            'radiation_use_efficiency_potential': {
+                'dtype': 'float32',
+                'units': 'g_biomass/MJ',
+                'crop_specific': True,
+                'temperature_adjusted': True
+            }
+        }
+    },
+    
+    'wind_variables': {
+        'wind_measurements': {
+            'wind_speed_daily_mean': {
+                'dtype': 'float32',
+                'units': 'm/s',
+                'valid_range': [0, 50],
+                'precision': 0.1,
+                'measurement_height': '10m',
+                'prediction_importance': 'medium_high'
+            },
+            'wind_speed_max_daily': {
+                'dtype': 'float32',
+                'units': 'm/s',
+                'measurement_period': '3_second_gust',
+                'storm_damage_indicator': True
+            },
+            'wind_direction_prevailing': {
+                'dtype': 'float32',
+                'units': 'degrees',
+                'reference': 'north_clockwise',
+                'seasonal_patterns': True
+            }
+        },
+        'wind_effects': {
+            'wind_chill_factor': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'calculation': 'temperature_wind_speed_combination',
+                'cold_stress_indicator': True
+            },
+            'evapotranspiration_wind_component': {
+                'dtype': 'float32',
+                'aerodynamic_resistance_factor': True,
+                'et_calculation_critical': True
+            }
+        }
+    },
+    
+    'atmospheric_pressure': {
+        'pressure_measurements': {
+            'atmospheric_pressure_daily': {
+                'dtype': 'float32',
+                'units': 'hPa',
+                'valid_range': [980, 1040],
+                'precision': 0.1,
+                'weather_pattern_indicator': True
+            },
+            'pressure_tendency': {
+                'dtype': 'float32',
+                'units': 'hPa/3h',
+                'weather_change_predictor': True
+            }
+        }
+    },
+    
+    'derived_agroclimatic_indices': {
+        'evapotranspiration': {
+            'reference_et_penman_monteith': {
+                'dtype': 'float32',
+                'units': 'mm/day',
+                'method': 'FAO56_penman_monteith',
+                'reference_crop': 'grass',
+                'prediction_importance': 'very_high',
+                'inputs': ['temperature', 'humidity', 'radiation', 'wind']
+            },
+            'potential_et_priestley_taylor': {
+                'dtype': 'float32',
+                'units': 'mm/day',
+                'method': 'priestley_taylor',
+                'alpha_coefficient': 1.26
+            },
+            'crop_et_adjusted': {
+                'dtype': 'float32',
+                'units': 'mm/day',
+                'calculation': 'reference_et * crop_coefficient',
+                'crop_specific': True,
+                'growth_stage_dependent': True
+            }
+        },
+        'water_balance': {
+            'daily_water_balance': {
+                'dtype': 'float32',
+                'units': 'mm',
+                'calculation': 'precipitation - et_crop',
+                'cumulative_deficit_surplus': True
+            },
+            'soil_water_deficit': {
+                'dtype': 'float32',
+                'units': 'mm',
+                'cumulative_calculation': True,
+                'drought_stress_indicator': True,
+                'crop_wilting_thresholds': {
+                    'maize': 150,
+                    'tomato': 100,
+                    'potato': 120
+                }
+            }
+        },
+        'thermal_indices': {
+            'heat_index': {
+                'dtype': 'float32',
+                'units': 'degree_celsius',
+                'calculation': 'temperature_humidity_combination',
+                'human_animal_stress_indicator': True
+            },
+            'temperature_humidity_index': {
+                'dtype': 'float32',
+                'livestock_stress_threshold': 72,
+                'calculation': '0.8*temp + rh*(temp-14.4) + 46.4'
+            }
+        },
+        'drought_indices': {
+            'standardized_precipitation_index': {
+                'spi_1_month': {
+                    'dtype': 'float32',
+                    'range': [-3, 3],
+                    'drought_categories': {
+                        'extreme_drought': -2.0,
+                        'severe_drought': -1.5,
+                        'moderate_drought': -1.0,
+                        'normal': [-1.0, 1.0],
+                        'wet': 1.0
+                    }
+                },
+                'spi_3_month': {
+                    'dtype': 'float32',
+                    'seasonal_drought_indicator': True
+                },
+                'spi_6_month': {
+                    'dtype': 'float32',
+                    'agricultural_drought_indicator': True
+                }
+            },
+            'aridity_index': {
+                'dtype': 'float32',
+                'calculation': 'precipitation / potential_et',
+                'climate_classification': True,
+                'annual_calculation': True
+            }
+        },
+        'crop_specific_indices': {
+            'corn_heat_units': {
+                'dtype': 'float32',
+                'units': 'heat_units',
+                'calculation': 'modified_gdd_for_corn',
+                'crop_applications': ['maize']
+            },
+            'chill_hours': {
+                'dtype': 'int16',
+                'units': 'hours',
+                'temperature_range': [0, 7],  # celsius
+                'fruit_tree_applications': True
+            }
+        }
+    },
+    
+    'extreme_weather_events': {
+        'temperature_extremes': {
+            'frost_events': {
+                'frost_occurrence': {
+                    'dtype': 'bool',
+                    'temperature_threshold': 0.0
+                },
+                'frost_duration': {
+                    'dtype': 'float32',
+                    'units': 'hours',
+                    'damage_potential': 'duration_dependent'
+                }
+            },
+            'heat_waves': {
+                'heat_wave_occurrence': {
+                    'dtype': 'bool',
+                    'definition': 'consecutive_days_above_threshold'
+                },
+                'heat_wave_duration': {
+                    'dtype': 'int16',
+                    'units': 'days',
+                    'severity_indicator': True
+                },
+                'heat_wave_intensity': {
+                    'dtype': 'float32',
+                    'units': 'degree_celsius',
+                    'calculation': 'mean_excess_above_threshold'
+                }
+            }
+        },
+        'precipitation_extremes': {
+            'heavy_rainfall_events': {
+                'daily_rainfall_percentile_95': {
+                    'dtype': 'float32',
+                    'units': 'mm',
+                    'climatological_reference': '30_year_period'
+                },
+                'extreme_rainfall_threshold_exceeded': {
+                    'dtype': 'bool',
+                    'threshold': 'site_specific_percentile_99'
+                }
+            },
+            'flood_risk_indicators': {
+                'antecedent_precipitation_index': {
+                    'dtype': 'float32',
+                    'units': 'mm',
+                    'calculation': 'weighted_previous_rainfall',
+                    'flood_risk_assessment': True
+                }
+            }
+        },
+        'wind_extremes': {
+            'storm_events': {
+                'high_wind_occurrence': {
+                    'dtype': 'bool',
+                    'threshold': 15  # m/s
+                },
+                'storm_damage_potential': {
+                    'dtype': 'float32',
+                    'calculation': 'wind_speed_duration_combination',
+                    'crop_lodging_risk': True
+                }
+            }
+        }
+    },
+    
+    'forecast_integration': {
+        'weather_forecasts': {
+            'forecast_horizon': {
+                'dtype': 'int16',
+                'units': 'days',
+                'typical_range': [1, 15],
+                'accuracy_degradation': 'horizon_dependent'
+            },
+            'forecast_variables': [
+                'temperature_min_max',
+                'precipitation_probability',
+                'precipitation_amount',
+                'relative_humidity',
+                'wind_speed'
+            ],
+            'ensemble_forecasts': {
+                'ensemble_mean': {
+                    'dtype': 'float32',
+                    'calculation': 'mean_of_ensemble_members'
+                },
+                'ensemble_spread': {
+                    'dtype': 'float32',
+                    'uncertainty_indicator': True
+                },
+                'probability_thresholds': {
+                    'precipitation_probability': {
+                        'dtype': 'float32',
+                        'units': 'percent',
+                        'thresholds': [1, 5, 10, 25]  # mm
+                    }
+                }
+            }
+        },
+        'seasonal_forecasts': {
+            'seasonal_outlook': {
+                'dtype': 'category',
+                'categories': ['above_normal', 'normal', 'below_normal'],
+                'variables': ['temperature', 'precipitation'],
+                'lead_time': '1_3_months'
+            }
+        }
+    },
+    
+    'climate_normals': {
+        'climatological_reference': {
+            'reference_period': '1991_2020',
+            'monthly_normals': {
+                'temperature_normal': {
+                    'dtype': 'float32',
+                    'units': 'degree_celsius',
+                    'monthly_values': True
+                },
+                'precipitation_normal': {
+                    'dtype': 'float32',
+                    'units': 'mm',
+                    'monthly_values': True
+                }
+            },
+            'anomaly_calculation': {
+                'temperature_anomaly': {
+                    'dtype': 'float32',
+                    'calculation': 'observed - normal',
+                    'climate_change_indicator': True
+                },
+                'precipitation_anomaly': {
+                    'dtype': 'float32',
+                    'calculation': '(observed - normal) / normal * 100',
+                    'units': 'percent'
+                }
+            }
+        }
+    },
+    
+    'quality_control': {
+        'data_quality_flags': {
+            'measurement_quality': {
+                'dtype': 'int8',
+                'flag_values': [0, 1, 2, 3, 4],
+                'flag_meanings': 'good questionable poor missing estimated'
+            },
+            'temporal_consistency': {
+                'dtype': 'int8',
+                'flag_values': [0, 1, 2],
+                'flag_meanings': 'consistent minor_gaps major_gaps'
+            },
+            'spatial_consistency': {
+                'dtype': 'int8',
+                'flag_values': [0, 1, 2],
+                'flag_meanings': 'consistent neighboring_stations_agree isolated_anomaly'
+            }
+        },
+        'qc_procedures': {
+            'range_checks': {
+                'physical_limits': 'variable_specific_bounds',
+                'climatological_limits': 'percentile_based_local_climate',
+                'temporal_consistency': 'rate_of_change_limits'
+            },
+            'spike_detection': {
+                'method': 'median_absolute_deviation',
+                'threshold': '3_sigma_equivalent'
+            },
+            'gap_filling': {
+                'methods': ['linear_interpolation', 'spatial_interpolation', 'climatological_replacement'],
+                'method_selection': 'gap_length_dependent',
+                'maximum_gap_days': 5
+            }
+        },
+        'uncertainty_quantification': {
+            'measurement_uncertainty': {
+                'dtype': 'float32',
+                'units': 'percent_or_absolute',
+                'instrument_specific': True
+            },
+            'interpolation_uncertainty': {
+                'dtype': 'float32',
+                'distance_dependent': True,
+                'topography_adjusted': True
+            }
+        },
+        'data_source_tracking': {
+            'primary_source': {
+                'dtype': 'category',
+                'categories': ['station_measured', 'satellite_derived', 'reanalysis', 'interpolated']
+            },
+            'processing_level': {
+                'dtype': 'category',
+                'categories': ['raw', 'qc_applied', 'gap_filled', 'bias_corrected']
+            },
+            'last_update': {
+                'dtype': 'datetime64[h]',
+                'real_time_tracking': True
+            }
+        }
+    },
+    
+    'ml_optimization': {
+        'feature_engineering': {
+            'temporal_features': {
+                'moving_averages': [3, 7, 15, 30],  # days
+                'cumulative_variables': ['precipitation', 'gdd', 'et'],
+                'lag_features': [1, 3, 7, 14],  # days
+                'seasonal_decomposition': ['trend', 'seasonal', 'residual']
+            },
+            'interaction_terms': [
+                'temperature_x_humidity',
+                'radiation_x_temperature',
+                'precipitation_x_temperature',
+                'vpd_x_radiation'
+            ],
+            'derived_ratios': [
+                'actual_et_over_potential_et',
+                'precipitation_over_et',
+                'gdd_efficiency_index'
+            ],
+            'extreme_event_indicators': [
+                'days_since_last_rain',
+                'consecutive_hot_days',
+                'heat_stress_accumulation',
+                'water_deficit_severity'
+            ]
+        },
+        'time_series_features': {
+            'phenology_alignment': {
+                'crop_calendar_features': True,
+                'growth_stage_specific_variables': True,
+                'critical_period_indicators': True
+            },
+            'seasonal_patterns': {
+                'harmonic_analysis': 'fourier_components',
+                'seasonal_anomalies': 'deviation_from_normal',
+                'transition_periods': 'season_change_indicators'
+            }
+        },
+        'predictive_modeling': {
+            'target_variable_relationships': {
+                'yield_drivers': [
+                    'cumulative_gdd',
+                    'water_balance_critical_periods',
+                    'radiation_interception_efficiency',
+                    'temperature_stress_duration'
+                ],
+                'yield_limiters': [
+                    'drought_stress_severity',
+                    'heat_stress_frequency',
+                    'excessive_moisture_periods',
+                    'extreme_weather_damage'
+                ]
+            },
+            'lead_time_optimization': {
+                'short_term': '1_15_days',
+                'medium_term': '1_3_months',
+                'seasonal': '3_6_months'
+            }
+        },
+        'data_preprocessing': {
+            'normalization_strategy': 'robust_scaling_with_outlier_treatment',
+            'missing_data_handling': 'multiple_imputation_with_uncertainty',
+            'temporal_alignment': 'crop_calendar_based'
+        }
+    }
+}

@@ -1,0 +1,138 @@
+netcdf_agricultural_schema = {
+    'global_attributes': {
+        'title': 'Multi-Crop Agricultural Dataset for Cameroon',
+        'institution': 'SYNTHI IA - FASA Dschang',
+        'source': 'Weather stations, satellite data, field surveys',
+        'references': 'CF-1.8, ACDD-1.3',
+        'conventions': 'CF-1.8',
+        'creator_name': 'SYNTHI IA Research Team',
+        'creator_email': 'data@synthi-ai.com',
+        'project': 'Multi-Crop Yield Prediction System',
+        'geospatial_bounds': 'POLYGON((8.5 2.0, 16.0 2.0, 16.0 13.0, 8.5 13.0, 8.5 2.0))',
+        'geospatial_lat_min': 2.0,
+        'geospatial_lat_max': 13.0,
+        'geospatial_lon_min': 8.5,
+        'geospatial_lon_max': 16.0,
+        'time_coverage_start': '2000-01-01T00:00:00Z',
+        'time_coverage_end': '2024-12-31T23:59:59Z',
+        'processing_level': 'L3',
+        'license': 'CC BY 4.0'
+    },
+    'dimensions': {
+        'time': 'unlimited',
+        'lat': 200,
+        'lon': 300,
+        'field': 10000,
+        'crop_type': 25,
+        'variety': 500,
+        'depth': 5
+    },
+    'coordinate_variables': {
+        'time': {
+            'dtype': 'double',
+            'units': 'days since 2000-01-01 00:00:00',
+            'calendar': 'gregorian',
+            'standard_name': 'time',
+            'long_name': 'Time',
+            'axis': 'T'
+        },
+        'lat': {
+            'dtype': 'float64',
+            'units': 'degrees_north',
+            'standard_name': 'latitude',
+            'long_name': 'Latitude',
+            'axis': 'Y',
+            'valid_range': [2.0, 13.0]
+        },
+        'lon': {
+            'dtype': 'float64',
+            'units': 'degrees_east',
+            'standard_name': 'longitude',
+            'long_name': 'Longitude',
+            'axis': 'X',
+            'valid_range': [8.5, 16.0]
+        },
+        'depth': {
+            'dtype': 'float32',
+            'units': 'm',
+            'standard_name': 'depth',
+            'long_name': 'Soil Depth',
+            'axis': 'Z',
+            'positive': 'down',
+            'values': [0.05, 0.10, 0.20, 0.30, 0.50]
+        }
+    },
+    'data_variables': {
+        'temperature': {
+            'dimensions': ('time', 'lat', 'lon'),
+            'dtype': 'float32',
+            'units': 'degree_celsius',
+            'standard_name': 'air_temperature',
+            'long_name': 'Daily Mean Air Temperature at 2m',
+            '_FillValue': -9999.0,
+            'valid_range': [-10, 50],
+            'cell_methods': 'time: mean',
+            'ancillary_variables': 'temperature_quality'
+        },
+        'precipitation': {
+            'dimensions': ('time', 'lat', 'lon'),
+            'dtype': 'float32',
+            'units': 'mm',
+            'standard_name': 'precipitation_amount',
+            'long_name': 'Daily Precipitation Amount',
+            '_FillValue': -9999.0,
+            'valid_range': [0, 500],
+            'cell_methods': 'time: sum'
+        },
+        'soil_ph': {
+            'dimensions': ('lat', 'lon', 'depth'),
+            'dtype': 'float32',
+            'units': '1',
+            'standard_name': 'soil_ph',
+            'long_name': 'Soil pH (water method)',
+            '_FillValue': -9999.0,
+            'valid_range': [3.5, 9.5],
+            'methodology': 'water 1:2.5 ratio'
+        },
+        'ndvi': {
+            'dimensions': ('time', 'lat', 'lon'),
+            'dtype': 'float32',
+            'units': '1',
+            'standard_name': 'normalized_difference_vegetation_index',
+            'long_name': 'Normalized Difference Vegetation Index',
+            '_FillValue': -9999.0,
+            'valid_range': [-1, 1],
+            'satellite_source': 'Sentinel-2',
+            'processing_level': 'L2A'
+        },
+        'crop_yield': {
+            'dimensions': ('time', 'field', 'crop_type'),
+            'dtype': 'float32',
+            'units': 'kg/ha',
+            'long_name': 'Crop Yield per Hectare',
+            '_FillValue': -9999.0,
+            'valid_range': [0, 100000],
+            'crop_specific_ranges': {
+                'maize': [500, 8000],
+                'tomato': [5000, 80000],
+                'potato': [8000, 30000],
+                'lettuce': [8000, 25000]
+            }
+        }
+    },
+    'quality_variables': {
+        'temperature_quality': {
+            'dimensions': ('time', 'lat', 'lon'),
+            'dtype': 'int8',
+            'flag_values': [0, 1, 2, 3, 4],
+            'flag_meanings': 'good questionable poor missing estimated',
+            'long_name': 'Temperature Data Quality Flag'
+        },
+        'precipitation_quality': {
+            'dimensions': ('time', 'lat', 'lon'),
+            'dtype': 'int8',
+            'flag_values': [0, 1, 2, 3],
+            'flag_meanings': 'measured estimated interpolated missing'
+        }
+    }
+}
