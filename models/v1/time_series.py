@@ -310,7 +310,7 @@ def train_hybrid_model(
         batch_size=cfg["batch_size"],
         shuffle=True,
         collate_fn=collate_timeseries,
-        num_workers=0,
+        num_workers=cfg.get("num_workers", 0),
         pin_memory=(device != "cpu"),
     )
 
@@ -321,7 +321,7 @@ def train_hybrid_model(
             batch_size=cfg["batch_size"],
             shuffle=False,
             collate_fn=collate_timeseries,
-            num_workers=0,
+            num_workers=cfg.get("num_workers", 0),
             pin_memory=(device != "cpu"),
         )
 

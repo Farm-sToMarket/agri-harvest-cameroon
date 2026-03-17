@@ -13,22 +13,14 @@ from models.v1.config import LIGHTGBM_PARAMS, XGBOOST_PARAMS, YIELDNET_CONFIG
 
 # ── PyTorch YieldNet ────────────────────────────────────────────────────────
 
-_torch_patched = False
-
-
-def _ensure_torch_base():
-    """Ensure YieldNet inherits from nn.Module (lazy, on first use)."""
-    global _torch_patched
-    if _torch_patched:
-        return
+try:
     import torch.nn as nn
+    _BASE = nn.Module
+except ImportError:
+    _BASE = object
 
-    if not issubclass(YieldNet, nn.Module):
-        YieldNet.__bases__ = (nn.Module,)
-    _torch_patched = True
 
-
-class YieldNet:
+class YieldNet(_BASE):
     """Feedforward neural network for tabular yield prediction.
 
     Architecture: Linear -> ReLU -> BatchNorm -> Dropout (repeated) -> Linear(1)
@@ -37,8 +29,7 @@ class YieldNet:
     def __init__(self, input_dim: int, config: dict | None = None):
         import torch.nn as nn
 
-        _ensure_torch_base()
-        nn.Module.__init__(self)
+        super().__init__()
 
         cfg = config or YIELDNET_CONFIG
         layers: list[nn.Module] = []
@@ -58,13 +49,6 @@ class YieldNet:
 
     def forward(self, x):
         return self.net(x)
-
-
-# Eagerly patch if torch is already available
-try:
-    _ensure_torch_base()
-except ImportError:
-    pass
 
 
 # ── Parameter builders ──────────────────────────────────────────────────────

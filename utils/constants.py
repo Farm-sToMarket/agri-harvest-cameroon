@@ -89,9 +89,6 @@ IRAD_CENTERS = {
     }
 }
 
-# Collection names prefix
-COLLECTION_PREFIX = "agri_"
-
 # Default field validation ranges
 VALIDATION_RANGES = {
     "temperature": {"min": -5, "max": 50},

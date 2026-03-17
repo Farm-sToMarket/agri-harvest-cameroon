@@ -76,24 +76,6 @@ YIELDNET_CONFIG = {
     "num_workers": 4,
 }
 
-# ── Time series (Hybrid LSTM + Tabular) ────────────────────────────────────
-TIMESERIES_CONFIG = {
-    "weather_features": [
-        "temperature_min",
-        "temperature_max",
-        "precipitation_daily",
-        "relative_humidity",
-        "solar_radiation",
-    ],
-    "max_sequence_length": 180,
-    "lstm_hidden": 128,
-    "lstm_layers": 2,
-    "attention_heads": 8,
-    "batch_size": 4096,
-    "epochs": 30,
-    "learning_rate": 0.001,
-}
-
 
 @dataclass
 class ModelConfig:
@@ -124,5 +106,42 @@ class ModelConfig:
     optuna_n_trials: int = 50
     optuna_timeout: int | None = None
 
+    # Time series
+    ts_lstm_hidden: int = 128
+    ts_lstm_layers: int = 2
+    ts_attention_heads: int = 8
+    ts_batch_size: int = 4096
+    ts_epochs: int = 30
+    ts_lr: float = 0.001
+    ts_max_seq_len: int = 180
+
     # SHAP
     shap_sample_size: int = 50_000
+
+
+# ── Time series (Hybrid LSTM + Tabular) ────────────────────────────────────
+_TS_WEATHER_FEATURES = [
+    "temperature_min",
+    "temperature_max",
+    "precipitation_daily",
+    "relative_humidity",
+    "solar_radiation",
+]
+
+
+def _build_timeseries_config() -> dict:
+    """Build TIMESERIES_CONFIG from ModelConfig defaults so they stay in sync."""
+    _defaults = ModelConfig()
+    return {
+        "weather_features": _TS_WEATHER_FEATURES,
+        "max_sequence_length": _defaults.ts_max_seq_len,
+        "lstm_hidden": _defaults.ts_lstm_hidden,
+        "lstm_layers": _defaults.ts_lstm_layers,
+        "attention_heads": _defaults.ts_attention_heads,
+        "batch_size": _defaults.ts_batch_size,
+        "epochs": _defaults.ts_epochs,
+        "learning_rate": _defaults.ts_lr,
+    }
+
+
+TIMESERIES_CONFIG = _build_timeseries_config()

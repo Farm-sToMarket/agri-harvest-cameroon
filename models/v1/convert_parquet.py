@@ -40,9 +40,10 @@ def convert_csv_to_parquet(
     if float64_cols:
         df = df.with_columns(pl.col(float64_cols).cast(pl.Float32))
 
+    _string_type = pl.String if hasattr(pl, "String") else pl.Utf8
     cat_candidates = [STRATIFY_COLUMN, "crop_type", "crop_name", "season", "crop_group"]
     for c in cat_candidates:
-        if c in df.columns and df[c].dtype == pl.Utf8:
+        if c in df.columns and df[c].dtype in (pl.Utf8, _string_type):
             df = df.with_columns(pl.col(c).cast(pl.Categorical))
 
     df.write_parquet(parquet_path, compression=compression, use_pyarrow=True)

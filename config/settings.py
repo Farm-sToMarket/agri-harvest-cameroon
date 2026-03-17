@@ -9,6 +9,8 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import logging
 
+from utils.constants import CAMEROON_BOUNDS, MAIN_CROPS
+
 logger = logging.getLogger(__name__)
 
 
@@ -44,12 +46,7 @@ class Settings(BaseSettings):
     default_timezone: str = Field("Africa/Douala", alias="DEFAULT_TIMEZONE")
     default_coordinate_system: str = Field("WGS84", alias="DEFAULT_COORDINATE_SYSTEM")
     country_bounds: Dict[str, float] = Field(
-        default={
-            "north": 13.1,
-            "south": 1.6,
-            "east": 16.2,
-            "west": 8.3,
-        },
+        default=CAMEROON_BOUNDS,
     )
 
     # IRAD configuration
@@ -67,7 +64,7 @@ class Settings(BaseSettings):
     ml_experiment_tracking: bool = Field(True, alias="ML_EXPERIMENT_TRACKING")
 
     # API configuration
-    api_host: str = Field("0.0.0.0", alias="API_HOST")
+    api_host: str = Field("127.0.0.1", alias="API_HOST")
     api_port: int = Field(8000, alias="API_PORT")
     api_reload: bool = Field(False, alias="API_RELOAD")
     api_cors_origins: List[str] = Field(
@@ -84,7 +81,7 @@ class Settings(BaseSettings):
     log_file_path: Optional[str] = Field(None, alias="LOG_FILE_PATH")
 
     # Security configuration
-    secret_key: str = Field(..., alias="SECRET_KEY")
+    secret_key: str = Field("change-me-in-production", alias="SECRET_KEY")
     access_token_expire_minutes: int = Field(30, alias="ACCESS_TOKEN_EXPIRE_MINUTES")
 
     # External data configuration
@@ -151,8 +148,7 @@ class Settings(BaseSettings):
 
     # Main crops configuration
     main_crops: List[str] = Field(
-        ["maize", "rice", "cassava", "potato", "tomato", "cocoa",
-         "groundnut", "sorghum", "millet", "cowpea", "plantain", "yam", "cotton"],
+        default=MAIN_CROPS,
         alias="MAIN_CROPS",
     )
 

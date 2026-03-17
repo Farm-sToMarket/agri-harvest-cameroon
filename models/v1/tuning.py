@@ -116,14 +116,18 @@ class HyperparameterTuner:
             dtest = xgb.DMatrix(self.X_test, label=self.y_test)
 
             pruning_cb = XGBoostPruningCallback(trial, "test-rmse")
+            early_stop_cb = xgb.callback.EarlyStopping(
+                rounds=self.config.xgb_early_stopping,
+                metric_name="rmse",
+                data_name="test",
+            )
             model = xgb.train(
                 params,
                 dtrain,
                 num_boost_round=800,
                 evals=[(dtest, "test")],
-                early_stopping_rounds=self.config.xgb_early_stopping,
                 verbose_eval=False,
-                callbacks=[pruning_cb],
+                callbacks=[early_stop_cb, pruning_cb],
             )
 
             y_pred = model.predict(dtest)

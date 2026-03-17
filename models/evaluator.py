@@ -8,7 +8,6 @@ from sklearn.metrics import (
     mean_squared_error,
     mean_absolute_error,
     r2_score,
-    mean_absolute_percentage_error,
 )
 
 
@@ -23,6 +22,11 @@ class MetricsResult:
     n_samples: int
 
 
+def _safe_mape(y_true: np.ndarray, y_pred: np.ndarray, epsilon: float = 1e-3) -> float:
+    """MAPE guarded against near-zero actuals."""
+    return float(np.mean(np.abs((y_true - y_pred) / np.maximum(np.abs(y_true), epsilon))))
+
+
 def evaluate(y_true: np.ndarray, y_pred: np.ndarray) -> MetricsResult:
     """Compute global regression metrics."""
     y_true = np.asarray(y_true)
@@ -31,7 +35,7 @@ def evaluate(y_true: np.ndarray, y_pred: np.ndarray) -> MetricsResult:
         rmse=float(np.sqrt(mean_squared_error(y_true, y_pred))),
         mae=float(mean_absolute_error(y_true, y_pred)),
         r2=float(r2_score(y_true, y_pred)),
-        mape=float(mean_absolute_percentage_error(y_true, y_pred)),
+        mape=_safe_mape(y_true, y_pred),
         n_samples=len(y_true),
     )
 

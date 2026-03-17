@@ -4,7 +4,8 @@ Based on meteorological infrastructure and agricultural needs
 """
 
 from typing import Optional, List, Dict, Any
-from datetime import datetime, date
+import datetime as _dt
+from datetime import datetime
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 from bson import ObjectId
@@ -72,15 +73,15 @@ class WeatherStationModel(BaseModel):
     microclimate_effects: Optional[bool] = Field(False, description="Microclimate effects")
 
     # Operational metadata
-    installation_date: Optional[date] = Field(None, description="Installation date")
-    data_availability_start: Optional[date] = Field(None, description="Data availability start")
-    data_availability_end: Optional[date] = Field(None, description="Data availability end")
+    installation_date: Optional[_dt.date] = Field(None, description="Installation date")
+    data_availability_start: Optional[_dt.date] = Field(None, description="Data availability start")
+    data_availability_end: Optional[_dt.date] = Field(None, description="Data availability end")
     completeness_percentage: Optional[float] = Field(None, ge=0, le=100, description="Completeness %")
 
     # Contact and management
     operator: Optional[str] = Field(None, description="Station operator")
     maintenance_schedule: Optional[str] = Field(None, description="Maintenance schedule")
-    calibration_date: Optional[date] = Field(None, description="Last calibration date")
+    calibration_date: Optional[_dt.date] = Field(None, description="Last calibration date")
 
     # Status
     is_active: bool = Field(True, description="Active station")
@@ -267,7 +268,7 @@ class WeatherDataModel(BaseModel):
     # Identifiers and metadata
     id: Optional[str] = Field(None, alias="_id")
     station_id: str = Field(..., description="Station identifier")
-    date: date = Field(..., description="Measurement date")
+    date: _dt.date = Field(..., description="Measurement date")
 
     # Location (may differ from station for interpolated data)
     latitude: Optional[float] = Field(None, ge=1.6, le=13.1, description="Point latitude")
@@ -321,11 +322,6 @@ class WeatherDataModel(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
-        json_encoders={
-            ObjectId: str,
-            datetime: lambda v: v.isoformat(),
-            date: lambda v: v.isoformat(),
-        },
     )
 
 
@@ -417,7 +413,7 @@ class WeatherSchema:
     def get_sample_document() -> Dict[str, Any]:
         return {
             "station_id": "CMR_WEATHER_001",
-            "date": date.today(),
+            "date": _dt.date.today(),
             "latitude": 3.8667,
             "longitude": 11.5167,
             "elevation": 650,

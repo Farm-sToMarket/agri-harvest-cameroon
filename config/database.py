@@ -28,6 +28,7 @@ class DatabaseConfig:
         self._database: Optional[AsyncIOMotorDatabase] = None
         self._sync_client: Optional[MongoClient] = None
         self._connection_verified = False
+        self._indexes_created = False
 
         self.collections = {
             "soil_data": self.settings.get_collection_name("soil_data"),
@@ -70,7 +71,9 @@ class DatabaseConfig:
 
             self._database = self._client[self.settings.mongodb_database]
             await self._verify_connection()
-            await self._setup_indexes()
+            if not self._indexes_created:
+                await self._setup_indexes()
+                self._indexes_created = True
 
             logger.info("MongoDB connection established successfully")
             return self._database
@@ -247,8 +250,8 @@ class DatabaseConfig:
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
 
-    async def create_data_backup(self, collection_names: Optional[List[str]] = None) -> Dict[str, Any]:
-        """Creates a backup of specified data"""
+    async def get_backup_summary(self, collection_names: Optional[List[str]] = None) -> Dict[str, Any]:
+        """Returns a summary of document counts for specified collections."""
         if not collection_names:
             collection_names = list(self.collections.keys())
 
@@ -308,12 +311,7 @@ async def get_db_transaction():
 
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            try:
-                yield session
-                await session.commit_transaction()
-            except Exception:
-                await session.abort_transaction()
-                raise
+            yield session
 
 
 class MongoDBUtils:
