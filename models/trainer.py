@@ -147,7 +147,6 @@ class YieldModelTrainer:
             "config": {
                 "test_size": self.config.test_size,
                 "random_state": self.config.random_state,
-                "cv_folds": self.config.cv_folds,
             },
         }
         model_path = save_model(

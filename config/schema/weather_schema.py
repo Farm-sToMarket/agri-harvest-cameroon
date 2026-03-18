@@ -5,10 +5,9 @@ Based on meteorological infrastructure and agricultural needs
 
 from typing import Optional, List, Dict, Any
 import datetime as _dt
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict, model_validator
-from bson import ObjectId
 from utils.date_utils import get_agricultural_season
 
 
@@ -467,6 +466,6 @@ class WeatherSchema:
             "season": "grand_dry_season",
             "rainfall_regime": "bimodal",
             "data_source": "automatic_station",
-            "created_at": datetime.now(),
+            "created_at": datetime.now(timezone.utc),
             "version": 1,
         }

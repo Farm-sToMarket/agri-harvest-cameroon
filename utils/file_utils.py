@@ -5,6 +5,7 @@ File handling utilities for agricultural data processing
 import os
 import json
 import csv
+import shutil
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Union
 import logging
@@ -220,7 +221,7 @@ def backup_file(file_path: Union[str, Path], backup_suffix: str = '.bak') -> boo
             return False
 
         backup_path = original_path.with_suffix(original_path.suffix + backup_suffix)
-        original_path.rename(backup_path)
+        shutil.copy2(original_path, backup_path)
         logger.info("Created backup: %s", backup_path)
         return True
     except Exception as e:

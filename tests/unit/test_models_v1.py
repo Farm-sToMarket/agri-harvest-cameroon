@@ -378,18 +378,16 @@ class TestTuner:
         n = 200
         X = pd.DataFrame(rng.randn(n, 5), columns=[f"f{i}" for i in range(5)])
         y = pd.Series(rng.uniform(500, 5000, n))
-        from sklearn.model_selection import train_test_split
-        X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=42)
-        return X_tr, X_te, y_tr, y_te
+        return X, y
 
     def test_optimize_lightgbm(self, synth_data):
         pytest.importorskip("optuna")
         pytest.importorskip("lightgbm")
         from models.v1.tuning import HyperparameterTuner
 
-        X_tr, X_te, y_tr, y_te = synth_data
+        X, y = synth_data
         cfg = ModelConfig(lgb_num_boost_round=20, lgb_early_stopping=5)
-        tuner = HyperparameterTuner(X_tr, X_te, y_tr, y_te, cfg)
+        tuner = HyperparameterTuner(X, y, cfg)
         params = tuner.optimize_lightgbm(n_trials=3)
         assert "num_leaves" in params
         assert "learning_rate" in params
@@ -399,8 +397,8 @@ class TestTuner:
         pytest.importorskip("xgboost")
         from models.v1.tuning import HyperparameterTuner
 
-        X_tr, X_te, y_tr, y_te = synth_data
-        tuner = HyperparameterTuner(X_tr, X_te, y_tr, y_te, ModelConfig(xgb_early_stopping=5))
+        X, y = synth_data
+        tuner = HyperparameterTuner(X, y, ModelConfig(xgb_early_stopping=5))
         params = tuner.optimize_xgboost(n_trials=3)
         assert "max_depth" in params
 
@@ -409,9 +407,9 @@ class TestTuner:
         pytest.importorskip("torch")
         from models.v1.tuning import HyperparameterTuner
 
-        X_tr, X_te, y_tr, y_te = synth_data
+        X, y = synth_data
         tuner = HyperparameterTuner(
-            X_tr, X_te, y_tr, y_te,
+            X, y,
             ModelConfig(yieldnet_epochs=3),
         )
         params = tuner.optimize_yieldnet(n_trials=2)
@@ -426,9 +424,9 @@ class TestTuner:
         pytest.importorskip("torch")
         from models.v1.tuning import HyperparameterTuner
 
-        X_tr, X_te, y_tr, y_te = synth_data
+        X, y = synth_data
         tuner = HyperparameterTuner(
-            X_tr, X_te, y_tr, y_te,
+            X, y,
             ModelConfig(
                 lgb_num_boost_round=20,
                 lgb_early_stopping=5,

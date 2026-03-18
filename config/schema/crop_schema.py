@@ -4,10 +4,9 @@ Based on IRAD agricultural taxonomy and local cultivation practices
 """
 
 from typing import Optional, List, Dict, Any
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from enum import Enum
 from pydantic import BaseModel, Field, field_validator, ConfigDict, model_validator
-from bson import ObjectId
 
 
 class CropGroup(str, Enum):
@@ -444,6 +443,6 @@ class CropSchema:
                 "land_equivalent_ratio": 1.35,
             },
             "data_source": "IRAD_field_survey",
-            "created_at": datetime.now(),
+            "created_at": datetime.now(timezone.utc),
             "version": 1,
         }

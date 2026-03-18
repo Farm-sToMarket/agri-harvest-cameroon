@@ -33,7 +33,7 @@ AGROECOLOGICAL_ZONES = [
 # Main crops in Cameroon
 MAIN_CROPS = [
     "maize", "rice", "cassava", "potato", "tomato", "cocoa",
-    "groundnut", "sorghum", "millet", "cowpea", "plantain", "yam", "cotton"
+    "groundnut", "sorghum", "millet", "cowpea", "plantain_banana", "yam", "cotton"
 ]
 
 # Weather station types
@@ -65,28 +65,43 @@ IRAD_CENTERS = {
     "centre_sud": {
         "location": "Nkolbisson, Yaounde",
         "coordinates": {"lat": 3.8667, "lon": 11.5167},
-        "elevation": 650
+        "elevation": 650,
+        "agroecological_zone": "humid_forest_inland",
+        "research_focus": ["maize", "groundnut", "cassava", "plantain_banana"],
+        "data_quality": "high",
     },
     "west_highlands": {
         "location": "Bambili, Bamenda",
         "coordinates": {"lat": 5.9833, "lon": 10.2500},
-        "elevation": 2000
+        "elevation": 2000,
+        "agroecological_zone": "western_highlands",
+        "research_focus": ["potato", "maize", "cowpea"],
+        "data_quality": "high",
     },
     "littoral": {
         "location": "Ekona, Buea",
         "coordinates": {"lat": 4.2000, "lon": 9.3500},
-        "elevation": 450
+        "elevation": 450,
+        "agroecological_zone": "humid_forest_coast",
+        "research_focus": ["cocoa", "plantain_banana", "cassava"],
+        "data_quality": "medium",
     },
     "far_north": {
         "location": "Maroua",
         "coordinates": {"lat": 10.5833, "lon": 14.3167},
-        "elevation": 420
+        "elevation": 420,
+        "agroecological_zone": "sahel_savanna",
+        "research_focus": ["sorghum", "millet", "cotton", "groundnut"],
+        "data_quality": "medium",
     },
     "south_west": {
         "location": "Kumba",
         "coordinates": {"lat": 4.6333, "lon": 9.4500},
-        "elevation": 100
-    }
+        "elevation": 100,
+        "agroecological_zone": "humid_forest_coast",
+        "research_focus": ["cocoa", "plantain_banana", "cassava"],
+        "data_quality": "medium",
+    },
 }
 
 # Default field validation ranges

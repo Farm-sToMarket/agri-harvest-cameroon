@@ -1,6 +1,6 @@
 """ML module for Cameroon agricultural yield prediction."""
 
-from models.v1.config import ModelConfig
+from models.config import ModelConfig
 
 __all__ = ["YieldModelTrainer", "YieldPredictor", "ModelConfig"]
 

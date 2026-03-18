@@ -4,6 +4,7 @@ Centralized class for all database operations
 """
 
 import logging
+import time
 from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -218,9 +219,9 @@ class DatabaseConfig:
             if not self._database:
                 await self.connect()
 
-            start_time = datetime.now()
+            start_time = time.monotonic()
             await self._client.admin.command("ping")
-            ping_time = (datetime.now() - start_time).total_seconds() * 1000
+            ping_time = (time.monotonic() - start_time) * 1000
 
             db_stats = await self._database.command("dbStats")
 
@@ -302,16 +303,25 @@ async def get_database() -> AsyncIOMotorDatabase:
 
 @asynccontextmanager
 async def get_db_transaction():
-    """Context manager for MongoDB transactions"""
+    """Context manager for MongoDB transactions.
+
+    Requires a replica set. Standalone MongoDB does not support transactions.
+    """
     db_config = get_database_config()
     mongo_client = db_config.client
 
     if not mongo_client:
         raise ConnectionError("Database client not initialized")
 
-    async with await mongo_client.start_session() as session:
-        async with session.start_transaction():
-            yield session
+    try:
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                yield session
+    except ConnectionFailure as e:
+        raise ConnectionError(
+            "Transactions require a MongoDB replica set. "
+            "Standalone MongoDB does not support multi-document transactions."
+        ) from e
 
 
 class MongoDBUtils:

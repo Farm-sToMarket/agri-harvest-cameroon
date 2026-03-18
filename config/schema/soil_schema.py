@@ -4,10 +4,9 @@ Based on IRAD infrastructure and international standards
 """
 
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict, model_validator
-from bson import ObjectId
 
 
 class TextureClass(str, Enum):
@@ -263,15 +262,20 @@ class SoilSchema:
                             "elevation": {"bsonType": "double", "minimum": 0, "maximum": 4095},
                         },
                     },
-                    "chemical_properties.ph_water": {
-                        "bsonType": "double",
-                        "minimum": 3.5,
-                        "maximum": 9.5,
-                    },
-                    "chemical_properties.organic_carbon": {
-                        "bsonType": "double",
-                        "minimum": 0.1,
-                        "maximum": 10.0,
+                    "chemical_properties": {
+                        "bsonType": "object",
+                        "properties": {
+                            "ph_water": {
+                                "bsonType": "double",
+                                "minimum": 3.5,
+                                "maximum": 9.5,
+                            },
+                            "organic_carbon": {
+                                "bsonType": "double",
+                                "minimum": 0.1,
+                                "maximum": 10.0,
+                            },
+                        },
                     },
                     "texture": {
                         "bsonType": "object",
@@ -280,10 +284,15 @@ class SoilSchema:
                             "clay_percentage", "texture_class",
                         ],
                     },
-                    "physical_properties.bulk_density": {
-                        "bsonType": "double",
-                        "minimum": 0.8,
-                        "maximum": 2.0,
+                    "physical_properties": {
+                        "bsonType": "object",
+                        "properties": {
+                            "bulk_density": {
+                                "bsonType": "double",
+                                "minimum": 0.8,
+                                "maximum": 2.0,
+                            },
+                        },
                     },
                 },
             }
@@ -302,7 +311,7 @@ class SoilSchema:
             },
             "agroecological_zone": "humid_forest_inland",
             "sampling_metadata": {
-                "sampling_date": datetime.now(),
+                "sampling_date": datetime.now(timezone.utc),
                 "sampling_strategy": "systematic_grid",
                 "sampling_depth": "0-20cm",
                 "sample_id": "SOIL_001",
@@ -357,6 +366,6 @@ class SoilSchema:
                 "limiting_factors": [],
             },
             "data_source": "IRAD_field_survey",
-            "created_at": datetime.now(),
+            "created_at": datetime.now(timezone.utc),
             "version": 1,
         }

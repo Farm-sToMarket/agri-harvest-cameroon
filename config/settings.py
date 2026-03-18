@@ -227,49 +227,8 @@ class Settings(BaseSettings):
         return f"{self.mongodb_collection_prefix}{collection_type}"
 
     def get_irad_center_config(self, center_name: str) -> Optional[Dict[str, Any]]:
-        irad_centers = {
-            "centre_sud": {
-                "location": "Nkolbisson, Yaounde",
-                "coordinates": {"lat": 3.8667, "lon": 11.5167},
-                "elevation": 650,
-                "agroecological_zone": "humid_forest_inland",
-                "research_focus": ["maize", "groundnut", "cassava", "plantain"],
-                "data_quality": "high",
-            },
-            "west_highlands": {
-                "location": "Bambili, Bamenda",
-                "coordinates": {"lat": 5.9833, "lon": 10.2500},
-                "elevation": 2000,
-                "agroecological_zone": "western_highlands",
-                "research_focus": ["potato", "maize", "beans", "vegetables"],
-                "data_quality": "very_high",
-            },
-            "littoral": {
-                "location": "Ekona, Buea",
-                "coordinates": {"lat": 4.2000, "lon": 9.3500},
-                "elevation": 450,
-                "agroecological_zone": "humid_forest_coast",
-                "research_focus": ["cocoa", "oil_palm", "plantain", "vegetables"],
-                "data_quality": "high",
-            },
-            "far_north": {
-                "location": "Maroua",
-                "coordinates": {"lat": 10.5833, "lon": 14.3167},
-                "elevation": 420,
-                "agroecological_zone": "sudan_savanna",
-                "research_focus": ["millet", "sorghum", "cotton", "cowpea"],
-                "data_quality": "medium",
-            },
-            "south_west": {
-                "location": "Kumba",
-                "coordinates": {"lat": 4.6333, "lon": 9.4500},
-                "elevation": 100,
-                "agroecological_zone": "humid_forest_coast",
-                "research_focus": ["rice", "maize", "vegetables", "aquaculture"],
-                "data_quality": "high",
-            },
-        }
-        return irad_centers.get(center_name)
+        from utils.constants import IRAD_CENTERS
+        return IRAD_CENTERS.get(center_name)
 
 
 @lru_cache()

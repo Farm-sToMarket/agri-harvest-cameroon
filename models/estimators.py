@@ -31,7 +31,7 @@ def _build_hist_gradient_boosting(
     )
 
 
-_MODEL_REGISTRY: dict[str, callable] = {
+_MODEL_REGISTRY: dict[str, object] = {
     "baseline": lambda rs: DummyRegressor(strategy="mean"),
     "ridge": lambda rs: Ridge(alpha=1.0),
     "random_forest": lambda rs: _build_random_forest(rs),

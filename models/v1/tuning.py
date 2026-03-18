@@ -2,7 +2,7 @@
 
 Usage::
 
-    tuner = HyperparameterTuner(X_train, X_test, y_train, y_test, config)
+    tuner = HyperparameterTuner(X_train, y_train, config)
     best = tuner.optimize_all()          # all 3 models
     best = tuner.optimize_lightgbm()     # single model
 """
@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 from models.v1.config import ModelConfig
 
@@ -18,22 +19,24 @@ from models.v1.config import ModelConfig
 class HyperparameterTuner:
     """Optuna hyperparameter optimization for yield prediction models.
 
-    Minimizes RMSE on the held-out test set.
+    Splits training data internally into tune/val sets to avoid
+    leaking information from the held-out test set.
     """
 
     def __init__(
         self,
         X_train: pd.DataFrame,
-        X_test: pd.DataFrame,
         y_train: pd.Series,
-        y_test: pd.Series,
         config: ModelConfig | None = None,
     ):
-        self.X_train = X_train
-        self.X_test = X_test
-        self.y_train = y_train
-        self.y_test = y_test
         self.config = config or ModelConfig()
+        # Internal split: tune on 80%, validate on 20% of training data
+        self.X_tune, self.X_val, self.y_tune, self.y_val = train_test_split(
+            X_train,
+            y_train,
+            test_size=0.2,
+            random_state=self.config.random_state,
+        )
 
     def optimize_lightgbm(self, n_trials: int = 50, timeout: int | None = None) -> dict:
         """Optuna study for LightGBM with pruning callback.
@@ -63,8 +66,8 @@ class HyperparameterTuner:
                 "max_depth": trial.suggest_int("max_depth", 3, 15),
             }
 
-            lgb_train = lgb.Dataset(self.X_train, self.y_train)
-            lgb_valid = lgb.Dataset(self.X_test, self.y_test, reference=lgb_train)
+            lgb_train = lgb.Dataset(self.X_tune, self.y_tune)
+            lgb_valid = lgb.Dataset(self.X_val, self.y_val, reference=lgb_train)
 
             pruning_cb = LightGBMPruningCallback(trial, "rmse")
             model = lgb.train(
@@ -79,8 +82,8 @@ class HyperparameterTuner:
                 ],
             )
 
-            y_pred = model.predict(self.X_test)
-            rmse = float(np.sqrt(np.mean((self.y_test.values - y_pred) ** 2)))
+            y_pred = model.predict(self.X_val)
+            rmse = float(np.sqrt(np.mean((self.y_val.values - y_pred) ** 2)))
             return rmse
 
         study = optuna.create_study(direction="minimize", study_name="lightgbm")
@@ -112,26 +115,26 @@ class HyperparameterTuner:
                 "reg_lambda": trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
             }
 
-            dtrain = xgb.DMatrix(self.X_train, label=self.y_train)
-            dtest = xgb.DMatrix(self.X_test, label=self.y_test)
+            dtrain = xgb.DMatrix(self.X_tune, label=self.y_tune)
+            dval = xgb.DMatrix(self.X_val, label=self.y_val)
 
-            pruning_cb = XGBoostPruningCallback(trial, "test-rmse")
+            pruning_cb = XGBoostPruningCallback(trial, "val-rmse")
             early_stop_cb = xgb.callback.EarlyStopping(
                 rounds=self.config.xgb_early_stopping,
                 metric_name="rmse",
-                data_name="test",
+                data_name="val",
             )
             model = xgb.train(
                 params,
                 dtrain,
                 num_boost_round=800,
-                evals=[(dtest, "test")],
+                evals=[(dval, "val")],
                 verbose_eval=False,
                 callbacks=[early_stop_cb, pruning_cb],
             )
 
-            y_pred = model.predict(dtest)
-            rmse = float(np.sqrt(np.mean((self.y_test.values - y_pred) ** 2)))
+            y_pred = model.predict(dval)
+            rmse = float(np.sqrt(np.mean((self.y_val.values - y_pred) ** 2)))
             return rmse
 
         study = optuna.create_study(direction="minimize", study_name="xgboost")
@@ -172,17 +175,17 @@ class HyperparameterTuner:
             nn_config = {"hidden_layers": hidden_layers, "dropout": dropout}
 
             scaler = StandardScaler()
-            X_tr = scaler.fit_transform(self.X_train.values.astype(np.float32))
-            X_te = scaler.transform(self.X_test.values.astype(np.float32))
+            X_tr = scaler.fit_transform(self.X_tune.values.astype(np.float32))
+            X_va = scaler.transform(self.X_val.values.astype(np.float32))
 
             device = "cuda" if self.config.use_gpu and torch.cuda.is_available() else "cpu"
-            model = YieldNet(self.X_train.shape[1], config=nn_config).to(device)
+            model = YieldNet(self.X_tune.shape[1], config=nn_config).to(device)
             criterion = torch.nn.MSELoss()
             optimizer = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
             train_ds = torch.utils.data.TensorDataset(
                 torch.tensor(X_tr, dtype=torch.float32),
-                torch.tensor(self.y_train.values.reshape(-1, 1), dtype=torch.float32),
+                torch.tensor(self.y_tune.values.reshape(-1, 1), dtype=torch.float32),
             )
             loader = torch.utils.data.DataLoader(
                 train_ds, batch_size=batch_size, shuffle=True, num_workers=0,
@@ -202,9 +205,9 @@ class HyperparameterTuner:
                 # Report validation loss for pruning
                 model.eval()
                 with torch.no_grad():
-                    te_tensor = torch.tensor(X_te, dtype=torch.float32).to(device)
-                    y_pred = model(te_tensor).cpu().numpy().flatten()
-                val_rmse = float(np.sqrt(np.mean((self.y_test.values - y_pred) ** 2)))
+                    va_tensor = torch.tensor(X_va, dtype=torch.float32).to(device)
+                    y_pred = model(va_tensor).cpu().numpy().flatten()
+                val_rmse = float(np.sqrt(np.mean((self.y_val.values - y_pred) ** 2)))
                 trial.report(val_rmse, epoch)
                 if trial.should_prune():
                     raise optuna.TrialPruned()

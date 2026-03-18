@@ -50,7 +50,6 @@ class TestConfig:
         cfg = ModelConfig()
         assert cfg.test_size == 0.2
         assert cfg.random_state == 42
-        assert cfg.cv_folds == 5
 
 
 # ---------------------------------------------------------------------------
