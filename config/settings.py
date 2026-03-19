@@ -1,6 +1,5 @@
 """
 Configuration settings for Cameroon Agricultural Data Management System
-Centralized configuration settings with MongoDB support
 """
 
 from typing import Optional, List, Dict, Any
@@ -9,7 +8,12 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import logging
 
-from utils.constants import CAMEROON_BOUNDS, MAIN_CROPS
+from .yaml_loader import load_geography, load_agriculture
+
+_geo = load_geography()
+_agri = load_agriculture()
+_CAMEROON_BOUNDS = _geo["cameroon_bounds"]
+_MAIN_CROPS = _agri["main_crops"]
 
 logger = logging.getLogger(__name__)
 
@@ -30,23 +34,11 @@ class Settings(BaseSettings):
     debug: bool = Field(False, alias="DEBUG")
     environment: str = Field("development", alias="ENVIRONMENT")
 
-    # MongoDB configuration
-    mongodb_username: Optional[str] = Field(None, alias="MONGODB_USERNAME")
-    mongodb_password: Optional[str] = Field(None, alias="MONGODB_PASSWORD")
-    mongodb_url: str = Field("mongodb://localhost:27017", alias="MONGODB_URL")
-    mongodb_database: str = Field("cameroon_agricultural_data", alias="MONGODB_DATABASE")
-    mongodb_collection_prefix: str = Field("agri_", alias="MONGODB_COLLECTION_PREFIX")
-    mongodb_max_pool_size: int = Field(50, alias="MONGODB_MAX_POOL_SIZE")
-    mongodb_min_pool_size: int = Field(5, alias="MONGODB_MIN_POOL_SIZE")
-    mongodb_socket_timeout_ms: int = Field(60000, alias="MONGODB_SOCKET_TIMEOUT_MS")
-    mongodb_connect_timeout_ms: int = Field(20000, alias="MONGODB_CONNECT_TIMEOUT_MS")
-    mongodb_server_selection_timeout_ms: int = Field(10000, alias="MONGODB_SERVER_SELECTION_TIMEOUT_MS")
-
     # Cameroon regional configuration
     default_timezone: str = Field("Africa/Douala", alias="DEFAULT_TIMEZONE")
     default_coordinate_system: str = Field("WGS84", alias="DEFAULT_COORDINATE_SYSTEM")
     country_bounds: Dict[str, float] = Field(
-        default=CAMEROON_BOUNDS,
+        default=_CAMEROON_BOUNDS,
     )
 
     # IRAD configuration
@@ -148,7 +140,7 @@ class Settings(BaseSettings):
 
     # Main crops configuration
     main_crops: List[str] = Field(
-        default=MAIN_CROPS,
+        default=_MAIN_CROPS,
         alias="MAIN_CROPS",
     )
 
@@ -166,13 +158,6 @@ class Settings(BaseSettings):
     enable_monitoring: bool = Field(True, alias="ENABLE_MONITORING")
     metrics_export_interval: int = Field(60, alias="METRICS_EXPORT_INTERVAL")
     health_check_interval: int = Field(30, alias="HEALTH_CHECK_INTERVAL")
-
-    @field_validator("mongodb_url")
-    @classmethod
-    def validate_mongodb_url(cls, v: str) -> str:
-        if not v.startswith(("mongodb://", "mongodb+srv://")):
-            raise ValueError("MongoDB URL must start with mongodb:// or mongodb+srv://")
-        return v
 
     @field_validator("environment")
     @classmethod
@@ -203,19 +188,6 @@ class Settings(BaseSettings):
         return v
 
     @property
-    def mongodb_connection_string(self) -> str:
-        url = self.mongodb_url
-        if self.mongodb_username and self.mongodb_password:
-            # Inject credentials into the connection URL
-            from urllib.parse import quote_plus
-            creds = f"{quote_plus(self.mongodb_username)}:{quote_plus(self.mongodb_password)}@"
-            if "://" in url:
-                scheme, rest = url.split("://", 1)
-                url = f"{scheme}://{creds}{rest}"
-        separator = "&" if "?" in url else "?"
-        return f"{url}{separator}maxPoolSize={self.mongodb_max_pool_size}"
-
-    @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
 
@@ -223,53 +195,9 @@ class Settings(BaseSettings):
     def is_development(self) -> bool:
         return self.environment.lower() == "development"
 
-    def get_collection_name(self, collection_type: str) -> str:
-        return f"{self.mongodb_collection_prefix}{collection_type}"
-
     def get_irad_center_config(self, center_name: str) -> Optional[Dict[str, Any]]:
-        irad_centers = {
-            "centre_sud": {
-                "location": "Nkolbisson, Yaounde",
-                "coordinates": {"lat": 3.8667, "lon": 11.5167},
-                "elevation": 650,
-                "agroecological_zone": "humid_forest_inland",
-                "research_focus": ["maize", "groundnut", "cassava", "plantain"],
-                "data_quality": "high",
-            },
-            "west_highlands": {
-                "location": "Bambili, Bamenda",
-                "coordinates": {"lat": 5.9833, "lon": 10.2500},
-                "elevation": 2000,
-                "agroecological_zone": "western_highlands",
-                "research_focus": ["potato", "maize", "beans", "vegetables"],
-                "data_quality": "very_high",
-            },
-            "littoral": {
-                "location": "Ekona, Buea",
-                "coordinates": {"lat": 4.2000, "lon": 9.3500},
-                "elevation": 450,
-                "agroecological_zone": "humid_forest_coast",
-                "research_focus": ["cocoa", "oil_palm", "plantain", "vegetables"],
-                "data_quality": "high",
-            },
-            "far_north": {
-                "location": "Maroua",
-                "coordinates": {"lat": 10.5833, "lon": 14.3167},
-                "elevation": 420,
-                "agroecological_zone": "sudan_savanna",
-                "research_focus": ["millet", "sorghum", "cotton", "cowpea"],
-                "data_quality": "medium",
-            },
-            "south_west": {
-                "location": "Kumba",
-                "coordinates": {"lat": 4.6333, "lon": 9.4500},
-                "elevation": 100,
-                "agroecological_zone": "humid_forest_coast",
-                "research_focus": ["rice", "maize", "vegetables", "aquaculture"],
-                "data_quality": "high",
-            },
-        }
-        return irad_centers.get(center_name)
+        from utils.constants import IRAD_CENTERS
+        return IRAD_CENTERS.get(center_name)
 
 
 @lru_cache()

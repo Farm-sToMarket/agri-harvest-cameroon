@@ -5,76 +5,33 @@ Supports LightGBM, XGBoost, and PyTorch models with Polars-based loading.
 
 from dataclasses import dataclass
 
-# ── Target ──────────────────────────────────────────────────────────────────
-TARGET = "yield_tha"
-TARGET_ALT = "yield_kg_ha"  # fallback for legacy 50K dataset
+from config.yaml_loader import load_models_v1
 
-# ── Leakage guard ──────────────────────────────────────────────────────────
-LEAKAGE_FEATURES = [
-    "nue",
-    "wue",
-    "yield_gap_ratio",
-    "harvest_index",
-    "biomass_kg_ha",
-]
+_cfg = load_models_v1()
 
-# ── Columns to drop (IDs + raw text already one-hot encoded) ──────────────
-ID_COLUMNS = [
-    "field_id",
-    "observation_date",
-    "planting_date",
-    "harvest_date",
-]
+# ── Target 
+TARGET = _cfg["target"]
+TARGET_ALT = _cfg["target_alt"]
 
-TEXT_COLUMNS = [
-    "data_source",
-    "agroecological_zone",
-    "season",
-    "crop_name",
-    "crop_type",
-    "crop_group",
-    "variety",
-]
+LEAKAGE_FEATURES = _cfg["leakage_features"]
 
+# ── Columns to drop (IDs + raw text already one-hot encoded) 
+ID_COLUMNS = _cfg["id_columns"]
+TEXT_COLUMNS = _cfg["text_columns"]
 DROP_COLUMNS = ID_COLUMNS + TEXT_COLUMNS
 
-STRATIFY_COLUMN = "agroecological_zone"
+STRATIFY_COLUMN = _cfg["stratify_column"]
 
-# ── LightGBM (recommended for 10M+) ────────────────────────────────────────
-LIGHTGBM_PARAMS = {
-    "objective": "regression",
-    "metric": "rmse",
-    "boosting_type": "gbdt",
-    "num_leaves": 128,
-    "learning_rate": 0.05,
-    "feature_fraction": 0.8,
-    "bagging_fraction": 0.8,
-    "bagging_freq": 5,
-    "verbose": -1,
-    "n_jobs": -1,
-}
+# ── LightGBM (recommended for 10M+) 
+LIGHTGBM_PARAMS = _cfg["lightgbm"]
 
-# ── XGBoost ─────────────────────────────────────────────────────────────────
-XGBOOST_PARAMS = {
-    "objective": "reg:squarederror",
-    "learning_rate": 0.05,
-    "max_depth": 12,
-    "subsample": 0.7,
-    "colsample_bytree": 0.8,
-    "n_estimators": 800,
-    "tree_method": "hist",
-}
+# ── XGBoost
+XGBOOST_PARAMS = _cfg["xgboost"]
 
-# ── PyTorch YieldNet ────────────────────────────────────────────────────────
-YIELDNET_CONFIG = {
-    "hidden_layers": [512, 256, 128],
-    "dropout": 0.3,
-    "batch_size": 8192,
-    "learning_rate": 0.001,
-    "weight_decay": 1e-5,
-    "epochs": 30,
-    "num_workers": 4,
-}
+# ── PyTorch YieldNet
+YIELDNET_CONFIG = _cfg["yieldnet"]
+
+_training = _cfg["training"]
 
 
 @dataclass
@@ -82,58 +39,52 @@ class ModelConfig:
     """Training configuration."""
 
     target: str = TARGET
-    test_size: float = 0.15
-    random_state: int = 42
+    test_size: float = _cfg["test_size"]
+    random_state: int = _cfg["random_state"]
     use_gpu: bool = False
 
     # LightGBM
-    lgb_num_boost_round: int = 2000
-    lgb_early_stopping: int = 50
-    lgb_log_period: int = 100
+    lgb_num_boost_round: int = _training["lgb_num_boost_round"]
+    lgb_early_stopping: int = _training["lgb_early_stopping"]
+    lgb_log_period: int = _training["lgb_log_period"]
 
     # XGBoost
-    xgb_early_stopping: int = 50
+    xgb_early_stopping: int = _training["xgb_early_stopping"]
 
     # PyTorch
-    yieldnet_epochs: int = 30
-    yieldnet_batch_size: int = 8192
-    yieldnet_lr: float = 0.001
+    yieldnet_epochs: int = _training["yieldnet_epochs"]
+    yieldnet_batch_size: int = _training["yieldnet_batch_size"]
+    yieldnet_lr: float = _training["yieldnet_lr"]
 
     # Saving
-    save_all_models: bool = False
+    save_all_models: bool = _training["save_all_models"]
 
     # Optuna
-    optuna_n_trials: int = 50
-    optuna_timeout: int | None = None
+    optuna_n_trials: int = _training["optuna_n_trials"]
+    optuna_timeout: int | None = _training["optuna_timeout"]
 
     # Time series
-    ts_lstm_hidden: int = 128
-    ts_lstm_layers: int = 2
-    ts_attention_heads: int = 8
-    ts_batch_size: int = 4096
-    ts_epochs: int = 30
-    ts_lr: float = 0.001
-    ts_max_seq_len: int = 180
+    ts_lstm_hidden: int = _cfg["time_series"]["lstm_hidden"]
+    ts_lstm_layers: int = _cfg["time_series"]["lstm_layers"]
+    ts_attention_heads: int = _cfg["time_series"]["attention_heads"]
+    ts_batch_size: int = _cfg["time_series"]["batch_size"]
+    ts_epochs: int = _cfg["time_series"]["epochs"]
+    ts_lr: float = _cfg["time_series"]["learning_rate"]
+    ts_max_seq_len: int = _cfg["time_series"]["max_sequence_length"]
 
     # SHAP
-    shap_sample_size: int = 50_000
+    shap_sample_size: int = _training["shap_sample_size"]
 
 
 # ── Time series (Hybrid LSTM + Tabular) ────────────────────────────────────
-_TS_WEATHER_FEATURES = [
-    "temperature_min",
-    "temperature_max",
-    "precipitation_daily",
-    "relative_humidity",
-    "solar_radiation",
-]
+_ts_cfg = _cfg["time_series"]
 
 
 def _build_timeseries_config() -> dict:
     """Build TIMESERIES_CONFIG from ModelConfig defaults so they stay in sync."""
     _defaults = ModelConfig()
     return {
-        "weather_features": _TS_WEATHER_FEATURES,
+        "weather_features": _ts_cfg["weather_features"],
         "max_sequence_length": _defaults.ts_max_seq_len,
         "lstm_hidden": _defaults.ts_lstm_hidden,
         "lstm_layers": _defaults.ts_lstm_layers,

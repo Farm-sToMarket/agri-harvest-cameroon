@@ -11,7 +11,6 @@ from utils.date_utils import (
     calculate_growing_degree_days,
     get_date_range,
     validate_date_range,
-    format_date_for_mongodb,
     parse_date_string,
 )
 
@@ -152,18 +151,6 @@ class TestValidateDateRange:
     def test_none_values(self):
         valid, msg = validate_date_range(None, None)
         assert valid is True
-
-
-class TestFormatDateForMongodb:
-    def test_naive_datetime(self):
-        dt = datetime(2024, 1, 1, 12, 0, 0)
-        result = format_date_for_mongodb(dt)
-        assert result.tzinfo == timezone.utc
-
-    def test_utc_datetime_unchanged(self):
-        dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
-        result = format_date_for_mongodb(dt)
-        assert result == dt
 
 
 class TestParseDateString:

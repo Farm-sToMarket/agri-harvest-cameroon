@@ -124,7 +124,7 @@ class YieldModelTrainer:
             from models.v1.tuning import HyperparameterTuner
 
             tuner = HyperparameterTuner(
-                X_train_clean, X_test_clean, y_train, y_test, self.config
+                X_train_clean, y_train, self.config
             )
             best_params = tuner.optimize_all(
                 model_names=model_names,
@@ -236,8 +236,7 @@ class YieldModelTrainer:
         print(imp.head(15).to_string())
 
         # Save
-        should_save = self.config.save_all_models or True  # always save lightgbm for now
-        if should_save:
+        if True:  # Always save LightGBM (primary model)
             meta = self._build_metadata("lightgbm", metrics, X_train)
             save_lightgbm(self._lgb_model, meta)
             print("  Saved to data/models/best_lgb.txt")

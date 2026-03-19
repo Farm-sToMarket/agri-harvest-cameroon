@@ -1,0 +1,113 @@
+target: yield_tha
+target_alt: yield_kg_ha
+test_size: 0.15
+random_state: 42
+
+leakage_features:
+  - nue
+  - wue
+  - yield_gap_ratio
+  - harvest_index
+  - biomass_kg_ha
+
+id_columns:
+  - field_id
+  - observation_date
+  - planting_date
+  - harvest_date
+
+text_columns:
+  - data_source
+  - agroecological_zone
+  - season
+  - crop_name
+  - crop_type
+  - crop_group
+  - variety
+
+stratify_column: agroecological_zone
+
+lightgbm:
+  objective: regression
+  metric: rmse
+  boosting_type: gbdt
+  num_leaves: 128
+  learning_rate: 0.05
+  feature_fraction: 0.8
+  bagging_fraction: 0.8
+  bagging_freq: 5
+  verbose: -1
+  n_jobs: -1
+
+xgboost:
+  objective: "reg:squarederror"
+  learning_rate: 0.05
+  max_depth: 12
+  subsample: 0.7
+  colsample_bytree: 0.8
+  n_estimators: 800
+  tree_method: hist
+
+yieldnet:
+  hidden_layers: [512, 256, 128]
+  dropout: 0.3
+  batch_size: 8192
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  epochs: 30
+  num_workers: 4
+
+training:
+  lgb_num_boost_round: 2000
+  lgb_early_stopping: 50
+  lgb_log_period: 100
+  xgb_early_stopping: 50
+  yieldnet_epochs: 30
+  yieldnet_batch_size: 8192
+  yieldnet_lr: 0.001
+  save_all_models: false
+  optuna_n_trials: 50
+  optuna_timeout: null
+  shap_sample_size: 50000
+
+time_series:
+  weather_features:
+    - temperature_min
+    - temperature_max
+    - precipitation_daily
+    - relative_humidity
+    - solar_radiation
+  max_sequence_length: 180
+  lstm_hidden: 128
+  lstm_layers: 2
+  attention_heads: 8
+  batch_size: 4096
+  epochs: 30
+  learning_rate: 0.001
+
+tuning:
+  lightgbm_search_space:
+    num_leaves: [31, 256]
+    learning_rate: [0.01, 0.3]
+    feature_fraction: [0.4, 1.0]
+    bagging_fraction: [0.4, 1.0]
+    min_child_samples: [5, 100]
+    lambda_l1: [0.00000001, 10.0]
+    lambda_l2: [0.00000001, 10.0]
+    max_depth: [3, 15]
+  xgboost_search_space:
+    max_depth: [3, 15]
+    learning_rate: [0.01, 0.3]
+    subsample: [0.5, 1.0]
+    colsample_bytree: [0.5, 1.0]
+    min_child_weight: [1, 20]
+    gamma: [0.00000001, 5.0]
+    reg_alpha: [0.00000001, 10.0]
+    reg_lambda: [0.00000001, 10.0]
+  yieldnet_search_space:
+    n_layers: [1, 4]
+    first_hidden: [128, 256, 512]
+    dropout: [0.1, 0.5]
+    learning_rate: [0.0001, 0.01]
+    weight_decay: [0.000001, 0.001]
+    batch_size: [2048, 4096, 8192]

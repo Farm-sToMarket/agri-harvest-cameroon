@@ -1,99 +1,36 @@
 """
 Constants for the Cameroon Agricultural Data Management System
+Loaded from YAML configuration files.
 """
 
-from typing import Dict, List
+from config.yaml_loader import load_geography, load_agriculture
+
+_geo = load_geography()
+_agri = load_agriculture()
 
 # Geographic bounds for Cameroon
-CAMEROON_BOUNDS = {
-    "north": 13.1,
-    "south": 1.6,
-    "east": 16.2,
-    "west": 8.3
-}
+CAMEROON_BOUNDS = _geo["cameroon_bounds"]
 
 # Elevation ranges
-ELEVATION_RANGE = {
-    "min": 0,      # Sea level at coast
-    "max": 4095    # Mount Cameroon
-}
+ELEVATION_RANGE = _geo["elevation_range"]
 
 # Agroecological zones
-AGROECOLOGICAL_ZONES = [
-    "sahel_savanna",
-    "sudan_savanna",
-    "guinea_savanna",
-    "forest_savanna_transition",
-    "humid_forest_inland",
-    "humid_forest_coast",
-    "western_highlands",
-    "mont_cameroun_volcanic"
-]
+AGROECOLOGICAL_ZONES = _geo["agroecological_zones"]
 
 # Main crops in Cameroon
-MAIN_CROPS = [
-    "maize", "rice", "cassava", "potato", "tomato", "cocoa",
-    "groundnut", "sorghum", "millet", "cowpea", "plantain", "yam", "cotton"
-]
+MAIN_CROPS = _agri["main_crops"]
 
 # Weather station types
-WEATHER_STATION_TYPES = [
-    "automatic",
-    "manual",
-    "hybrid",
-    "satellite_derived"
-]
+WEATHER_STATION_TYPES = _agri["weather_station_types"]
 
 # Soil texture classes (USDA classification)
-SOIL_TEXTURE_CLASSES = [
-    "sand", "loamy_sand", "sandy_loam", "loam", "silt_loam", "silt",
-    "sandy_clay_loam", "clay_loam", "silty_clay_loam", "sandy_clay",
-    "silty_clay", "clay"
-]
+SOIL_TEXTURE_CLASSES = _agri["soil_texture_classes"]
 
 # Data quality levels
-DATA_QUALITY_LEVELS = [
-    "very_low",
-    "low",
-    "medium",
-    "high",
-    "very_high"
-]
+DATA_QUALITY_LEVELS = _agri["data_quality_levels"]
 
 # IRAD research centers
-IRAD_CENTERS = {
-    "centre_sud": {
-        "location": "Nkolbisson, Yaounde",
-        "coordinates": {"lat": 3.8667, "lon": 11.5167},
-        "elevation": 650
-    },
-    "west_highlands": {
-        "location": "Bambili, Bamenda",
-        "coordinates": {"lat": 5.9833, "lon": 10.2500},
-        "elevation": 2000
-    },
-    "littoral": {
-        "location": "Ekona, Buea",
-        "coordinates": {"lat": 4.2000, "lon": 9.3500},
-        "elevation": 450
-    },
-    "far_north": {
-        "location": "Maroua",
-        "coordinates": {"lat": 10.5833, "lon": 14.3167},
-        "elevation": 420
-    },
-    "south_west": {
-        "location": "Kumba",
-        "coordinates": {"lat": 4.6333, "lon": 9.4500},
-        "elevation": 100
-    }
-}
+IRAD_CENTERS = _agri["irad_centers"]
 
 # Default field validation ranges
-VALIDATION_RANGES = {
-    "temperature": {"min": -5, "max": 50},
-    "precipitation": {"min": 0, "max": 500},
-    "humidity": {"min": 0, "max": 100},
-    "ph": {"min": 3.5, "max": 9.5},
-    "organic_carbon": {"min": 0.1, "max": 10.0}
-}
+VALIDATION_RANGES = _geo["validation_ranges"]

@@ -2,32 +2,34 @@
 Main entry point for the Cameroon Agricultural Data Management System
 """
 
-import asyncio
 import logging
+
+import uvicorn
+from fastapi import FastAPI
+
 from config.settings import get_settings, setup_logging
-from config.database import get_database
+
+settings = get_settings()
+setup_logging(settings)
+logger = logging.getLogger(__name__)
 
 
-async def main():
-    """Main application entry point"""
-    settings = get_settings()
-    setup_logging(settings)
+app = FastAPI(
+    title=settings.app_name,
+    version=settings.app_version,
+)
 
-    logger = logging.getLogger(__name__)
-    logger.info("Starting %s v%s", settings.app_name, settings.app_version)
 
-    try:
-        # Initialize database connection
-        db = await get_database()
-        logger.info("Database connection established successfully")
-
-        # TODO: Add your main application logic here
-        logger.info("Application initialized successfully")
-
-    except Exception as e:
-        logger.error("Failed to start application: %s", e)
-        raise
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run(
+        "main:app",
+        host=settings.api_host,
+        port=settings.api_port,
+        reload=settings.api_reload,
+    )

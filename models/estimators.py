@@ -8,12 +8,17 @@ from sklearn.ensemble import (
     StackingRegressor,
 )
 
+from config.yaml_loader import load_models_v0
+
+_est_cfg = load_models_v0()["estimators"]
+
 
 def _build_random_forest(random_state: int = 42) -> RandomForestRegressor:
+    rf = _est_cfg["random_forest"]
     return RandomForestRegressor(
-        n_estimators=300,
-        max_depth=20,
-        min_samples_leaf=10,
+        n_estimators=rf["n_estimators"],
+        max_depth=rf["max_depth"],
+        min_samples_leaf=rf["min_samples_leaf"],
         random_state=random_state,
         n_jobs=-1,
     )
@@ -22,18 +27,19 @@ def _build_random_forest(random_state: int = 42) -> RandomForestRegressor:
 def _build_hist_gradient_boosting(
     random_state: int = 42,
 ) -> HistGradientBoostingRegressor:
+    hgb = _est_cfg["hist_gradient_boosting"]
     return HistGradientBoostingRegressor(
-        max_iter=500,
-        max_depth=8,
-        learning_rate=0.05,
-        min_samples_leaf=20,
+        max_iter=hgb["max_iter"],
+        max_depth=hgb["max_depth"],
+        learning_rate=hgb["learning_rate"],
+        min_samples_leaf=hgb["min_samples_leaf"],
         random_state=random_state,
     )
 
 
-_MODEL_REGISTRY: dict[str, callable] = {
+_MODEL_REGISTRY: dict[str, object] = {
     "baseline": lambda rs: DummyRegressor(strategy="mean"),
-    "ridge": lambda rs: Ridge(alpha=1.0),
+    "ridge": lambda rs: Ridge(alpha=_est_cfg["ridge"]["alpha"]),
     "random_forest": lambda rs: _build_random_forest(rs),
     "hist_gradient_boosting": lambda rs: _build_hist_gradient_boosting(rs),
     "stacking": lambda rs: StackingRegressor(
@@ -41,7 +47,7 @@ _MODEL_REGISTRY: dict[str, callable] = {
             ("rf", _build_random_forest(rs)),
             ("hgb", _build_hist_gradient_boosting(rs)),
         ],
-        final_estimator=Ridge(alpha=1.0),
+        final_estimator=Ridge(alpha=_est_cfg["ridge"]["alpha"]),
         n_jobs=-1,
     ),
 }
