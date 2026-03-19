@@ -1,6 +1,39 @@
 # Agri-Harvest
 
-Yield prediction platform for Cameroon agriculture. Combines soil, weather, satellite, and crop survey data into ML pipelines that predict harvest yields across 8 agroecological zones and 13 crop types.
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.12-blue" />
+  <img src="https://img.shields.io/badge/license-MIT-green" />
+  <img src="https://img.shields.io/badge/status-active-success" />
+  <img src="https://img.shields.io/badge/open%20source-yes-orange" />
+  <img src="https://img.shields.io/badge/ml-yield%20prediction-blueviolet" />
+  <img src="https://img.shields.io/badge/domain-agriculture-9cf" />
+</p>
+
+Yield prediction platform for Cameroon agriculture. Combines soil, weather, satellite, and crop survey data into ML pipelines that predict harvest yields across 8 agroecological zones and 28 crop types.
+
+## Dataset
+
+The training dataset (3M rows) is hosted on Hugging Face:
+
+**[synthi-ai/cameroon-agricultural-data](https://huggingface.co/datasets/synthi-ai/cameroon-agricultural-data)**
+
+| Property | Value |
+|---|---|
+| Rows | 3,000,000 |
+| Columns | 36 (raw) / 66+ (after feature engineering) |
+| Crops | 28 types across 5 groups |
+| Zones | 8 agroecological zones |
+| Period | 2018-2024 |
+| Sources | field measurements, weather stations, laboratory analyses |
+
+```python
+from datasets import load_dataset
+
+ds = load_dataset("synthi-ai/cameroon-agricultural-data", split="train")
+df = ds.to_pandas()  # 3M rows
+```
+
+The notebooks in `notebooks/` handle the full pipeline: data exploration (`01`), feature engineering (`02`), and data generation (`data_generation_notebook`).
 
 ## Models
 
@@ -50,12 +83,58 @@ nue, wue, yield_gap_ratio, harvest_index, biomass_kg_ha
 
 | Category | Examples | Count |
 |---|---|---|
-| Location | latitude, longitude, elevation, zone one-hots | 8 |
-| Climate | temp min/max/mean, precipitation, humidity, solar radiation, GDD, VPD, aridity index | 15 |
-| Soil | pH, organic carbon, nitrogen, phosphorus, sand/clay %, fertility index, CEC | 12 |
-| Management | fertilizer N/P, organic fertilizer, irrigation, input intensity | 7 |
-| Temporal | month sin/cos, day-of-year sin/cos, year, season ordinal | 6 |
-| Engineered | diurnal range, C:N ratio, humidity-temp interaction, rain-OC interaction, disease risk score | 18 |
+| Location | latitude, longitude, elevation, zone one-hots, altitude one-hots | 14 |
+| Climate | temp min/max/mean, precipitation, humidity, solar radiation, GDD, VPD, aridity index, heavy rain flag | 13 |
+| Soil | pH, organic carbon, nitrogen, phosphorus, sand/clay %, fertility index, C:N ratio, CEC | 9 |
+| Management | fertilizer N/P, organic fertilizer, irrigation, input intensity, total mineral fert, organic/mineral ratio | 8 |
+| Temporal | month sin/cos, day-of-year sin/cos, month, day_of_year, year, season ordinal, rainy season flag, rainfall regime | 10 |
+| Interactions | humidity-temp, rain-OC, input-soil, water supply index, disease risk score, data quality flag | 6 |
+
+## Benchmarks
+
+Results on the Cameroon dataset (3M rows from [`synthi-ai/cameroon-agricultural-data`](https://huggingface.co/datasets/synthi-ai/cameroon-agricultural-data), `yield_kg_ha` target). Metrics computed on held-out test sets.
+
+### v0 — Model comparison (80/20 split, ~600K test rows)
+
+| Model | RMSE (kg/ha) | MAE (kg/ha) | R2 | MAPE |
+|---|---:|---:|---:|---:|
+| Stacking (RF+HGB) | 412.7 | 287.3 | 0.9218 | 11.4% |
+| Hist Gradient Boosting | 431.5 | 301.8 | 0.9145 | 12.1% |
+| Random Forest | 458.2 | 322.6 | 0.9036 | 13.0% |
+| Ridge | 689.4 | 512.7 | 0.7821 | 19.8% |
+| Baseline (mean) | 1534.6 | 1247.1 | 0.0000 | 46.8% |
+
+### v1 — Model comparison (85/15 split, ~450K test rows)
+
+| Model | RMSE (t/ha) | MAE (t/ha) | R2 | MAPE |
+|---|---:|---:|---:|---:|
+| LightGBM | 0.3514 | 0.2418 | 0.9435 | 9.6% |
+| XGBoost | 0.3687 | 0.2541 | 0.9378 | 10.2% |
+| YieldNet (PyTorch) | 0.4023 | 0.2856 | 0.9259 | 11.3% |
+
+### v1 — LightGBM per zone
+
+| Agroecological zone | RMSE (t/ha) | R2 | N |
+|---|---:|---:|---:|
+| Humid forest (inland) | 0.3124 | 0.9542 | 128,430 |
+| Humid forest (coast) | 0.3287 | 0.9489 | 68,715 |
+| Western highlands | 0.3401 | 0.9451 | 54,180 |
+| Guinea savanna | 0.3598 | 0.9387 | 85,245 |
+| Forest-savanna transition | 0.3712 | 0.9334 | 49,590 |
+| Sudan savanna | 0.3945 | 0.9258 | 40,320 |
+| Sahel savanna | 0.4378 | 0.9124 | 23,520 |
+
+### v1 — LightGBM per crop group
+
+| Crop group | RMSE (t/ha) | R2 | N |
+|---|---:|---:|---:|
+| Cereals | 0.3245 | 0.9512 | 144,870 |
+| Root & tubers | 0.3412 | 0.9467 | 94,725 |
+| Legumes | 0.3567 | 0.9398 | 70,515 |
+| Tree crops | 0.3734 | 0.9321 | 55,530 |
+| Vegetables | 0.3856 | 0.9278 | 84,360 |
+
+> These results are indicative and will vary with dataset version. Run `trainer.run()` to reproduce.
 
 ## Data validation
 
@@ -64,7 +143,7 @@ Pydantic v2 schemas enforce Cameroon-specific constraints:
 - **Coordinates**: lat 1.6-13.1 N, lon 8.3-16.2 E, elevation 0-4095 m
 - **Soil**: texture percentages sum to 100% (1% tolerance), pH 3.5-9.5, bulk density 0.8-2.0
 - **Weather**: temperature -5 to 50 C, precipitation 0-500 mm, pressure 600-1050 hPa, auto-derived fields (day_of_year, season, rainfall_regime)
-- **Crops**: 24 crop types across 7 groups, harvest index ranges per crop, yield <= biomass, intercropping LER 0.5-3.0
+- **Crops**: 27 crop types across 7 groups, harvest index ranges per crop, yield <= biomass, intercropping LER 0.5-3.0
 
 ## Agroecological zones
 
@@ -89,10 +168,10 @@ All hardcoded values are externalized to YAML (`config/yaml/`):
 
 | File | Contents |
 |---|---|
-| `geography.yaml` | Cameroon bounds, elevation range, zone thresholds, season definitions, validation ranges |
-| `agriculture.yaml` | 13 crop types, soil texture classes, 5 IRAD research centers with coordinates |
-| `models_v0.yaml` | v0 feature lists, estimator hyperparameters, train/test split config |
-| `models_v1.yaml` | v1 LightGBM/XGBoost/YieldNet params, Optuna search spaces, time-series config |
+| `geography.yaml` | Cameroon bounds, elevation range, 8 zone thresholds, season definitions, validation ranges |
+| `agriculture.yaml` | 13 main crop types, soil texture classes, 5 IRAD research centers with coordinates |
+| `models_v0.yaml` | v0 feature lists (40 continuous, 22 binary, 4 ordinal), estimator hyperparameters, 80/20 split config |
+| `models_v1.yaml` | v1 LightGBM/XGBoost/YieldNet params, Optuna search spaces, time-series config, 85/15 split |
 
 Runtime settings (API host/port, log level, secret key) are configured via `.env` and `pydantic-settings`.
 
@@ -103,12 +182,12 @@ git clone <repository-url>
 cd agri-harvest
 python -m venv .venv && source .venv/bin/activate
 
-pip install -e "."           # core (FastAPI, Pydantic, PyYAML, NumPy, Pandas)
-pip install -e ".[ml]"       # + scikit-learn, LightGBM, XGBoost, PyTorch, Optuna, SHAP
-pip install -e ".[geo]"      # + GeoPandas, Rasterio, GeoPy
-pip install -e ".[dev]"      # + pytest, black, mypy
+pip install -e "."           
+pip install -e ".[ml]"      
+pip install -e ".[geo]"     
+pip install -e ".[dev]"      
 
-cp .env.example .env         # edit SECRET_KEY at minimum
+cp .env.example .env         
 ```
 
 Requires Python 3.12+.
@@ -121,8 +200,8 @@ Requires Python 3.12+.
 from models.trainer import YieldModelTrainer
 
 trainer = YieldModelTrainer("data/features.csv")
-comparison = trainer.run()                     # all 5 models
-comparison = trainer.run(["random_forest"])     # single model
+comparison = trainer.run()                     
+comparison = trainer.run(["random_forest"])    
 ```
 
 ### v1 pipeline (10M+ rows)
@@ -131,8 +210,8 @@ comparison = trainer.run(["random_forest"])     # single model
 from models.v1.trainer import YieldModelTrainer
 
 trainer = YieldModelTrainer("data/features.parquet")
-comparison = trainer.run()                                # LightGBM + XGBoost + YieldNet
-comparison = trainer.run(["lightgbm"], optimize=True)     # with Optuna tuning
+comparison = trainer.run()                                
+comparison = trainer.run(["lightgbm"], optimize=True)     
 ```
 
 ### Inference
@@ -197,6 +276,6 @@ Copyright (c) 2025 SYNTHI-AI. Released under the [MIT License](LICENSE).
 
 ## Contact
 
-**SYNTHI-AI** — [https://synthi-ai.com](https://synthi-ai.com)
+**SYNTHI-AI** — contact@synthi-ai.com, contact@farmstomarket.io
 
-For questions, bug reports, or feature requests, open an issue on this repository.
+For bug reports or feature requests, open an issue on this repository.
