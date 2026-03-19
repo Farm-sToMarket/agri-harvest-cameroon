@@ -8,7 +8,6 @@ from utils.geospatial_utils import (
     validate_coordinates,
     calculate_distance,
     create_geojson_point,
-    create_mongodb_spatial_query,
     get_bounding_box,
     determine_agroecological_zone,
     calculate_slope,
@@ -77,18 +76,6 @@ class TestCreateGeojsonPoint:
         point = create_geojson_point(longitude=11.0, latitude=4.0)
         assert point["coordinates"][0] == 11.0  # longitude first
         assert point["coordinates"][1] == 4.0   # latitude second
-
-
-class TestCreateMongodbSpatialQuery:
-    def test_structure(self):
-        query = create_mongodb_spatial_query(3.8667, 11.5167, radius_km=5.0)
-        assert "$near" in query["coordinates"]
-        assert "$geometry" in query["coordinates"]["$near"]
-        assert query["coordinates"]["$near"]["$maxDistance"] == 5000
-
-    def test_default_radius(self):
-        query = create_mongodb_spatial_query(3.8667, 11.5167)
-        assert query["coordinates"]["$near"]["$maxDistance"] == 10000
 
 
 class TestGetBoundingBox:

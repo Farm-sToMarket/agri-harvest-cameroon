@@ -6,6 +6,10 @@ import math
 from typing import Tuple, Dict, Any, List, Optional
 from utils.constants import CAMEROON_BOUNDS
 
+from config.yaml_loader import load_geography
+
+_zone_thresholds = load_geography()["zone_thresholds"]
+
 
 def validate_coordinates(latitude: float, longitude: float) -> Tuple[bool, str]:
     """
@@ -77,32 +81,6 @@ def create_geojson_point(longitude: float, latitude: float) -> Dict[str, Any]:
     }
 
 
-def create_mongodb_spatial_query(
-    latitude: float,
-    longitude: float,
-    radius_km: float = 10.0
-) -> Dict[str, Any]:
-    """
-    Create MongoDB spatial query for finding nearby points
-
-    Args:
-        latitude: Center point latitude
-        longitude: Center point longitude
-        radius_km: Search radius in kilometers
-
-    Returns:
-        MongoDB spatial query
-    """
-    return {
-        "coordinates": {
-            "$near": {
-                "$geometry": create_geojson_point(longitude, latitude),
-                "$maxDistance": radius_km * 1000  # Convert to meters
-            }
-        }
-    }
-
-
 def get_bounding_box(
     latitude: float,
     longitude: float,
@@ -145,15 +123,6 @@ def determine_agroecological_zone(
     Uses a refined classification that accounts for Cameroon's north-south
     gradient, the western highlands massif, and the coastal zone.
 
-    Reference zones (IRAD/FAO classification):
-    - sahel_savanna: Far North (lat > 10), low elevation, < 600 mm rainfall
-    - sudan_savanna: North (lat 8-10), intermediate elevation
-    - guinea_savanna: Adamawa Plateau (lat 6-8)
-    - western_highlands: Bamenda-Bamboutos massif (elevation > 1200m, lon < 11.5)
-    - forest_savanna_transition: Transition belt (lat 5-6, not highlands)
-    - humid_forest_coast: Coastal lowlands (lat < 5, lon < 10, elev < 500)
-    - humid_forest_inland: Congo basin forest (lat < 5, interior)
-
     Args:
         latitude: Latitude in decimal degrees
         longitude: Longitude in decimal degrees
@@ -162,36 +131,34 @@ def determine_agroecological_zone(
     Returns:
         Agroecological zone name
     """
-    # Mont Cameroun volcanic zone: high-altitude volcanic slopes
-    if (4.0 <= latitude <= 4.35 and 9.0 <= longitude <= 9.35 and elevation > 2500):
+    mcv = _zone_thresholds["mont_cameroun_volcanic"]
+    if (mcv["lat"][0] <= latitude <= mcv["lat"][1]
+            and mcv["lon"][0] <= longitude <= mcv["lon"][1]
+            and elevation > mcv["min_elevation"]):
         return "mont_cameroun_volcanic"
 
-    # Western highlands: high-elevation massif in western Cameroon
-    # Covers Bamenda, Bamboutos, and parts of the volcanic chain
-    if elevation > 1200 and longitude < 11.5 and 4.5 < latitude < 7.5:
+    wh = _zone_thresholds["western_highlands"]
+    if (elevation > wh["min_elevation"]
+            and longitude < wh["max_lon"]
+            and wh["lat"][0] < latitude < wh["lat"][1]):
         return "western_highlands"
 
-    # Northern zones (latitude-driven, north to south)
-    if latitude > 10.0:
+    if latitude > _zone_thresholds["sahel_savanna"]["min_lat"]:
         return "sahel_savanna"
 
-    if latitude > 8.0:
+    if latitude > _zone_thresholds["sudan_savanna"]["min_lat"]:
         return "sudan_savanna"
 
-    if latitude > 6.0:
+    if latitude > _zone_thresholds["guinea_savanna"]["min_lat"]:
         return "guinea_savanna"
 
-    # Transition belt
-    if latitude > 5.0:
+    if latitude > _zone_thresholds["forest_savanna_transition"]["min_lat"]:
         return "forest_savanna_transition"
 
-    # Southern zones: coastal vs inland distinction
-    # Coastal zone: western, low-elevation, high-rainfall belt
-    # Includes Douala basin, Limbe, Kribi corridor
-    if longitude < 10.0 and elevation < 500:
+    hfc = _zone_thresholds["humid_forest_coast"]
+    if longitude < hfc["max_lon"] and elevation < hfc["max_elevation"]:
         return "humid_forest_coast"
 
-    # Default: interior forest (Centre, South, East regions)
     return "humid_forest_inland"
 
 

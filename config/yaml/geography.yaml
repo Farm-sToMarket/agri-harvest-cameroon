@@ -1,0 +1,71 @@
+cameroon_bounds:
+  north: 13.1
+  south: 1.6
+  east: 16.2
+  west: 8.3
+
+elevation_range:
+  min: 0
+  max: 4095
+
+agroecological_zones:
+  - sahel_savanna
+  - sudan_savanna
+  - guinea_savanna
+  - forest_savanna_transition
+  - humid_forest_inland
+  - humid_forest_coast
+  - western_highlands
+  - mont_cameroun_volcanic
+
+zone_thresholds:
+  mont_cameroun_volcanic:
+    lat: [4.0, 4.35]
+    lon: [9.0, 9.35]
+    min_elevation: 2500
+  western_highlands:
+    max_lon: 11.5
+    lat: [4.5, 7.5]
+    min_elevation: 1200
+  sahel_savanna:
+    min_lat: 10.0
+  sudan_savanna:
+    min_lat: 8.0
+  guinea_savanna:
+    min_lat: 6.0
+  forest_savanna_transition:
+    min_lat: 5.0
+  humid_forest_coast:
+    max_lon: 10.0
+    max_elevation: 500
+
+seasons:
+  latitude_threshold: 6.0
+  monomodal:
+    dry_season: [11, 12, 1, 2, 3]
+    early_rainy: [4]
+    rainy_season: [5, 6, 7, 8, 9]
+    late_rainy: [10]
+  bimodal:
+    grand_dry_season: [12, 1, 2]
+    first_rainy_season: [3, 4, 5]
+    petit_dry_season: [6, 7]
+    second_rainy_season: [8, 9, 10]
+    transition_to_dry: [11]
+
+validation_ranges:
+  temperature:
+    min: -5
+    max: 50
+  precipitation:
+    min: 0
+    max: 500
+  humidity:
+    min: 0
+    max: 100
+  ph:
+    min: 3.5
+    max: 9.5
+  organic_carbon:
+    min: 0.1
+    max: 10.0

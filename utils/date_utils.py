@@ -5,6 +5,13 @@ Date and time utilities for agricultural data processing
 from datetime import datetime, date, timezone, timedelta
 from typing import Optional, Tuple
 
+from config.yaml_loader import load_geography
+
+_seasons_cfg = load_geography()["seasons"]
+_LATITUDE_THRESHOLD = _seasons_cfg["latitude_threshold"]
+_MONOMODAL = _seasons_cfg["monomodal"]
+_BIMODAL = _seasons_cfg["bimodal"]
+
 
 def get_utc_now() -> datetime:
     """Get current UTC datetime"""
@@ -27,30 +34,12 @@ def get_agricultural_season(date_obj: date, latitude: Optional[float] = None) ->
         Season name
     """
     month = date_obj.month
-    is_monomodal = latitude is not None and latitude >= 6.0
+    is_monomodal = latitude is not None and latitude >= _LATITUDE_THRESHOLD
 
-    if is_monomodal:
-        # Northern Cameroon: single rainy season (May-October)
-        if month in (11, 12, 1, 2, 3):
-            return "dry_season"
-        elif month == 4:
-            return "early_rainy"
-        elif month in (5, 6, 7, 8, 9):
-            return "rainy_season"
-        elif month == 10:
-            return "late_rainy"
-    else:
-        # Southern Cameroon: bimodal rainfall
-        if month in (12, 1, 2):
-            return "grand_dry_season"
-        elif month in (3, 4, 5):
-            return "first_rainy_season"
-        elif month in (6, 7):
-            return "petit_dry_season"
-        elif month in (8, 9, 10):
-            return "second_rainy_season"
-        elif month == 11:
-            return "transition_to_dry"
+    seasons = _MONOMODAL if is_monomodal else _BIMODAL
+    for season_name, months in seasons.items():
+        if month in months:
+            return season_name
 
     return "unknown"
 
@@ -134,24 +123,6 @@ def validate_date_range(
         return False, "End date cannot be in the future"
 
     return True, ""
-
-
-def format_date_for_mongodb(date_obj: datetime) -> datetime:
-    """
-    Ensure datetime is UTC and properly formatted for MongoDB
-
-    Args:
-        date_obj: DateTime object to format
-
-    Returns:
-        UTC datetime object
-    """
-    if date_obj.tzinfo is None:
-        # Assume naive datetime is UTC
-        return date_obj.replace(tzinfo=timezone.utc)
-    else:
-        # Convert to UTC
-        return date_obj.astimezone(timezone.utc)
 
 
 def parse_date_string(date_str: str) -> Optional[date]:
