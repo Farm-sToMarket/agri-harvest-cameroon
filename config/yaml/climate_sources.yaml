@@ -1,0 +1,161 @@
+# Climate data source configuration
+# TerraClimate (monthly ~4km) and CHIRPS (daily ~5km)
+
+terraclimate:
+  base_url: "https://thredds.northwestknowledge.net/thredds/dodsC/agg_terraclimate"
+  variables:
+    tmin:
+      source_name: tmin
+      project_name: temperature_min
+      scale_factor: 0.1
+      units: degC
+    tmax:
+      source_name: tmax
+      project_name: temperature_max
+      scale_factor: 0.1
+      units: degC
+    ppt:
+      source_name: ppt
+      project_name: precipitation_monthly
+      scale_factor: 1.0
+      units: mm
+    srad:
+      source_name: srad
+      project_name: solar_radiation_raw
+      scale_factor: 0.1
+      units: W/m2
+    vap:
+      source_name: vap
+      project_name: vapor_pressure
+      scale_factor: 0.001
+      units: kPa
+    vpd:
+      source_name: vpd
+      project_name: vapor_pressure_deficit
+      scale_factor: 0.01
+      units: kPa
+    def:
+      source_name: def
+      project_name: climate_water_deficit
+      scale_factor: 0.1
+      units: mm
+    soil:
+      source_name: soil
+      project_name: soil_moisture
+      scale_factor: 0.1
+      units: mm
+    aet:
+      source_name: aet
+      project_name: actual_evapotranspiration
+      scale_factor: 0.1
+      units: mm
+    pet:
+      source_name: pet
+      project_name: potential_evapotranspiration
+      scale_factor: 0.1
+      units: mm
+    ws:
+      source_name: ws
+      project_name: wind_speed
+      scale_factor: 0.01
+      units: m/s
+
+chirps:
+  base_url: "https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_daily/netcdf/p05"
+  file_pattern: "chirps-v2.0.{year}.days_p05.nc"
+  variable:
+    source_name: precip
+    project_name: precipitation_daily
+    units: mm/day
+    fill_value: -9999.0
+
+spatial:
+  lat_min: 1.6
+  lat_max: 13.1
+  lon_min: 8.3
+  lon_max: 16.2
+  buffer_deg: 0.1
+
+temporal:
+  start_year: 2010
+  end_year: 2024
+
+network:
+  max_retries: 3
+  retry_delay_seconds: 5
+  timeout_seconds: 300
+
+output:
+  base_dir: data/climate
+  terraclimate_dir: data/climate/terraclimate
+  chirps_dir: data/climate/chirps
+  merged_dir: data/climate/merged
+
+# ── Derived variables from TerraClimate ──────────────────────────────────────
+derived_variables:
+  # Basic derivations
+  temperature_mean:
+    formula: "(temperature_min + temperature_max) / 2"
+    inputs: [temperature_min, temperature_max]
+    units: degC
+  relative_humidity:
+    formula: "100 * vapor_pressure / (0.6108 * exp(17.27 * T / (T + 237.3)))"
+    inputs: [vapor_pressure, temperature_mean]
+    units: "%"
+  solar_radiation:
+    formula: "solar_radiation_raw * 0.0864"
+    description: "W/m2 to MJ/m2/day"
+    inputs: [solar_radiation_raw]
+    units: MJ/m2/day
+  diurnal_range:
+    formula: "temperature_max - temperature_min"
+    inputs: [temperature_min, temperature_max]
+    units: degC
+
+  # Water-balance & drought indicators (from AET, PET, deficit, soil)
+  aridity_index:
+    formula: "precipitation_monthly / potential_evapotranspiration"
+    description: "UNEP aridity index: <0.2 arid, 0.2-0.5 semi-arid, >0.65 humid"
+    inputs: [precipitation_monthly, potential_evapotranspiration]
+    units: dimensionless
+  water_balance:
+    formula: "precipitation_monthly - actual_evapotranspiration"
+    description: "Monthly surplus (>0) or deficit (<0)"
+    inputs: [precipitation_monthly, actual_evapotranspiration]
+    units: mm
+  crop_water_stress:
+    formula: "1 - (actual_evapotranspiration / potential_evapotranspiration)"
+    description: "0 = no stress, 1 = max stress"
+    inputs: [actual_evapotranspiration, potential_evapotranspiration]
+    units: dimensionless
+
+  # Growing degree-days
+  gdd_base10:
+    formula: "max(temperature_mean - 10, 0)"
+    inputs: [temperature_mean]
+    units: degC-day
+  gdd_base15:
+    formula: "max(temperature_mean - 15, 0)"
+    inputs: [temperature_mean]
+    units: degC-day
+
+# ── Derived daily statistics from CHIRPS ─────────────────────────────────────
+chirps_daily_stats:
+  heavy_rain_days:
+    description: "Number of days with precipitation > 20 mm"
+    threshold_mm: 20.0
+    units: days/month
+  wet_days:
+    description: "Number of days with precipitation >= 1 mm"
+    threshold_mm: 1.0
+    units: days/month
+  max_dry_spell:
+    description: "Longest consecutive run of days with precipitation < 1 mm"
+    threshold_mm: 1.0
+    units: days
+  rain_intensity_max:
+    description: "Maximum daily precipitation in the month"
+    units: mm/day
+  precipitation_std:
+    description: "Standard deviation of daily precipitation within month"
+    units: mm/day

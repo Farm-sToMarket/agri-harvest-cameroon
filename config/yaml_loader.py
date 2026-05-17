@@ -32,3 +32,8 @@ def load_models_v0() -> dict:
 @lru_cache(maxsize=None)
 def load_models_v1() -> dict:
     return _load("models_v1.yaml")
+
+
+@lru_cache(maxsize=None)
+def load_climate_sources() -> dict:
+    return _load("climate_sources.yaml")
