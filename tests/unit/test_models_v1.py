@@ -32,9 +32,6 @@ DATA_PATH = Path("data/generated/cameroon_agricultural_features.csv")
 SKIP_NO_DATA = not DATA_PATH.exists()
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
-
-
 def _make_mini_df(n: int = 500) -> pl.DataFrame:
     """Create a small synthetic Polars DataFrame for testing."""
     rng = np.random.RandomState(42)
@@ -62,9 +59,6 @@ def _make_mini_df(n: int = 500) -> pl.DataFrame:
             "data_source": ["synthetic"] * n,
         }
     )
-
-
-# ── Config ──────────────────────────────────────────────────────────────────
 
 
 class TestConfig:
@@ -95,9 +89,6 @@ class TestConfig:
         """Importing config should not require torch/lgb/xgb."""
         from models.v1.config import ModelConfig as MC
         assert MC().target == TARGET
-
-
-# ── DataLoader ──────────────────────────────────────────────────────────────
 
 
 class TestDataLoader:
@@ -145,9 +136,6 @@ class TestDataLoader:
         assert df.shape[0] > 0
 
 
-# ── Preprocessing ───────────────────────────────────────────────────────────
-
-
 class TestPreprocessing:
     def test_prepare_for_torch(self):
         rng = np.random.RandomState(0)
@@ -182,9 +170,6 @@ class TestPreprocessing:
         assert result["flag"].dtype in (np.int64, np.int32, int)
 
 
-# ── Estimators ──────────────────────────────────────────────────────────────
-
-
 class TestEstimators:
     def test_yieldnet_forward(self):
         import torch
@@ -210,9 +195,6 @@ class TestEstimators:
 
         params = build_xgboost_params(use_gpu=False)
         assert params["tree_method"] == "hist"
-
-
-# ── Evaluator ───────────────────────────────────────────────────────────────
 
 
 class TestEvaluator:
@@ -253,9 +235,6 @@ class TestEvaluator:
         assert df.index[0] == "m1"
 
 
-# ── Persistence ─────────────────────────────────────────────────────────────
-
-
 class TestPersistence:
     def test_generic_roundtrip(self):
         obj = {"weights": [1, 2, 3], "bias": 0.5}
@@ -288,9 +267,6 @@ class TestPersistence:
                 orig_out = model(x)
                 loaded_out = loaded_model(x)
             torch.testing.assert_close(orig_out, loaded_out)
-
-
-# ── Time Series ─────────────────────────────────────────────────────────────
 
 
 class TestTimeSeries:
@@ -367,7 +343,39 @@ class TestTimeSeries:
         assert out_short.shape == out_long.shape == (4, 1)
 
 
-# ── Tuner ────────────────────────────────────────────────────────────────────
+class TestPredictorV1Validation:
+    def test_predict_missing_feature_raises(self):
+        """Predictor should raise ValueError on missing features."""
+        import torch
+        from models.v1.estimators import YieldNet
+        from models.v1.persistence import save_pytorch, load_pytorch
+        from sklearn.preprocessing import StandardScaler
+        from models.v1.predict import YieldPredictor
+
+        model = YieldNet(5)
+        scaler = StandardScaler()
+        scaler.fit(np.random.randn(10, 5))
+        meta = {
+            "model_name": "test_nn",
+            "input_dim": 5,
+            "feature_names": ["f0", "f1", "f2", "f3", "f4"],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = save_pytorch(model, scaler, meta, path=tmpdir, name="test")
+            predictor = YieldPredictor(path)
+
+            X_missing = pd.DataFrame({"f0": [1.0], "f1": [2.0]})
+            with pytest.raises(ValueError, match="Missing features"):
+                predictor.predict(X_missing)
+
+    def test_mape_finite_on_small_yields(self):
+        """MAPE should be finite even for yields near zero."""
+        y_true = np.array([0.5, 1.0, 0.1])
+        y_pred = np.array([0.6, 1.1, 0.2])
+        m = evaluate(y_true, y_pred)
+        assert np.isfinite(m.mape)
+        assert m.mape < 10
 
 
 class TestTuner:
@@ -438,9 +446,6 @@ class TestTuner:
         assert "lightgbm" in results
         assert "xgboost" in results
         assert "yieldnet" in results
-
-
-# ── Trainer (integration, small scale) ──────────────────────────────────────
 
 
 class TestTrainer:

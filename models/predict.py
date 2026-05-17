@@ -17,6 +17,11 @@ class YieldPredictor:
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Apply preprocessor and predict on a DataFrame."""
+        if self.feature_names:
+            missing = set(self.feature_names) - set(X.columns)
+            if missing:
+                raise ValueError(f"Missing features: {sorted(missing)}")
+            X = X[self.feature_names]
         X_transformed = self.preprocessor.transform(X)
         return self.model.predict(X_transformed)
 

@@ -9,26 +9,19 @@ from config.yaml_loader import load_models_v1
 
 _cfg = load_models_v1()
 
-# ── Target 
 TARGET = _cfg["target"]
 TARGET_ALT = _cfg["target_alt"]
 
 LEAKAGE_FEATURES = _cfg["leakage_features"]
 
-# ── Columns to drop (IDs + raw text already one-hot encoded) 
 ID_COLUMNS = _cfg["id_columns"]
 TEXT_COLUMNS = _cfg["text_columns"]
 DROP_COLUMNS = ID_COLUMNS + TEXT_COLUMNS
 
 STRATIFY_COLUMN = _cfg["stratify_column"]
 
-# ── LightGBM (recommended for 10M+) 
 LIGHTGBM_PARAMS = _cfg["lightgbm"]
-
-# ── XGBoost
 XGBOOST_PARAMS = _cfg["xgboost"]
-
-# ── PyTorch YieldNet
 YIELDNET_CONFIG = _cfg["yieldnet"]
 
 _training = _cfg["training"]
@@ -76,7 +69,6 @@ class ModelConfig:
     shap_sample_size: int = _training["shap_sample_size"]
 
 
-# ── Time series (Hybrid LSTM + Tabular) ────────────────────────────────────
 _ts_cfg = _cfg["time_series"]
 
 
@@ -92,6 +84,8 @@ def _build_timeseries_config() -> dict:
         "batch_size": _defaults.ts_batch_size,
         "epochs": _defaults.ts_epochs,
         "learning_rate": _defaults.ts_lr,
+        "tabular_hidden": _ts_cfg.get("tabular_hidden", [256, 128]),
+        "tabular_dropout": _ts_cfg.get("tabular_dropout", 0.3),
     }
 
 

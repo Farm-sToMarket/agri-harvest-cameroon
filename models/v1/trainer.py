@@ -59,8 +59,6 @@ class YieldModelTrainer:
         self.data_path = Path(data_path)
         self.config = config or ModelConfig()
 
-    # ── Public API ──────────────────────────────────────────────────────────
-
     def run(
         self,
         model_names: list[str] | None = None,
@@ -139,6 +137,7 @@ class YieldModelTrainer:
 
         if "lightgbm" in model_names:
             lgb_params = best_params.get("lightgbm")
+            # LightGBM handles NaN natively — pass raw data for best performance
             metrics = self._train_lightgbm(
                 X_train, X_test, y_train, y_test, test_groups,
                 extra_params=lgb_params,
@@ -180,8 +179,6 @@ class YieldModelTrainer:
 
         return comparison
 
-    # ── Shared evaluation helper ────────────────────────────────────────────
-
     def _evaluate_model(self, model_name, y_test, y_pred, test_groups):
         """Evaluate a model globally and per-group, print report."""
         metrics = evaluate(y_test, y_pred)
@@ -201,8 +198,6 @@ class YieldModelTrainer:
                 print(f"    {g:<30} RMSE={m.rmse:>10,.4f}  R2={m.r2:.4f}")
 
         return metrics
-
-    # ── Training methods ────────────────────────────────────────────────────
 
     def _train_lightgbm(self, X_train, X_test, y_train, y_test, test_groups,
                          extra_params=None):

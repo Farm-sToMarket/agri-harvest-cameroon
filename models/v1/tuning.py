@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
 from config.yaml_loader import load_models_v1
@@ -84,8 +85,7 @@ class HyperparameterTuner:
             )
 
             y_pred = model.predict(self.X_val)
-            rmse = float(np.sqrt(np.mean((self.y_val.values - y_pred) ** 2)))
-            return rmse
+            return float(np.sqrt(mean_squared_error(self.y_val, y_pred)))
 
         study = optuna.create_study(direction="minimize", study_name="lightgbm")
         study.optimize(objective, n_trials=n_trials, timeout=timeout)
@@ -133,8 +133,7 @@ class HyperparameterTuner:
             )
 
             y_pred = model.predict(dval)
-            rmse = float(np.sqrt(np.mean((self.y_val.values - y_pred) ** 2)))
-            return rmse
+            return float(np.sqrt(mean_squared_error(self.y_val, y_pred)))
 
         study = optuna.create_study(direction="minimize", study_name="xgboost")
         study.optimize(objective, n_trials=n_trials, timeout=timeout)
@@ -203,7 +202,7 @@ class HyperparameterTuner:
                 with torch.no_grad():
                     va_tensor = torch.tensor(X_va, dtype=torch.float32).to(device)
                     y_pred = model(va_tensor).cpu().numpy().flatten()
-                val_rmse = float(np.sqrt(np.mean((self.y_val.values - y_pred) ** 2)))
+                val_rmse = float(np.sqrt(mean_squared_error(self.y_val, y_pred)))
                 trial.report(val_rmse, epoch)
                 if trial.should_prune():
                     raise optuna.TrialPruned()

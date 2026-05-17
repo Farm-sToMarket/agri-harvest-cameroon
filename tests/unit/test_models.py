@@ -26,9 +26,6 @@ DATA_PATH = Path("data/generated/cameroon_agricultural_features.csv")
 SKIP_NO_DATA = not DATA_PATH.exists()
 
 
-# ---------------------------------------------------------------------------
-# Config
-# ---------------------------------------------------------------------------
 class TestConfig:
     def test_leakage_not_in_continuous(self):
         overlap = set(LEAKAGE_FEATURES) & set(CONTINUOUS_FEATURES)
@@ -52,9 +49,6 @@ class TestConfig:
         assert cfg.random_state == 42
 
 
-# ---------------------------------------------------------------------------
-# DataLoader
-# ---------------------------------------------------------------------------
 class TestDataLoader:
     @pytest.mark.skipif(SKIP_NO_DATA, reason="Dataset not available")
     def test_load_dataset(self):
@@ -79,9 +73,6 @@ class TestDataLoader:
         assert len(y_train) + len(y_test) == len(y)
 
 
-# ---------------------------------------------------------------------------
-# Preprocessor
-# ---------------------------------------------------------------------------
 class TestPreprocessor:
     @pytest.mark.skipif(SKIP_NO_DATA, reason="Dataset not available")
     def test_build_and_transform(self):
@@ -93,9 +84,6 @@ class TestPreprocessor:
         assert X_t.shape[1] > 0
 
 
-# ---------------------------------------------------------------------------
-# Estimators
-# ---------------------------------------------------------------------------
 class TestEstimators:
     @pytest.fixture
     def mini_data(self):
@@ -130,9 +118,6 @@ class TestEstimators:
             get_model("nonexistent")
 
 
-# ---------------------------------------------------------------------------
-# Evaluator
-# ---------------------------------------------------------------------------
 class TestEvaluator:
     def test_evaluate_perfect(self):
         y = np.array([100, 200, 300, 400, 500], dtype=float)
@@ -171,9 +156,6 @@ class TestEvaluator:
         assert "RMSE" in df.columns
 
 
-# ---------------------------------------------------------------------------
-# Persistence
-# ---------------------------------------------------------------------------
 class TestPersistence:
     def test_save_load_roundtrip(self):
         from sklearn.linear_model import Ridge
@@ -203,9 +185,77 @@ class TestPersistence:
             assert loaded_meta["model_name"] == "test_ridge"
 
 
-# ---------------------------------------------------------------------------
-# Trainer (integration, uses subsample)
-# ---------------------------------------------------------------------------
+class TestLeakageGuard:
+    def test_prepare_features_actually_excludes_leakage(self):
+        """Verify leakage features are excluded from X, not just from config lists."""
+        all_cols = (
+            CONTINUOUS_FEATURES + BINARY_FEATURES + ORDINAL_FEATURES
+            + LEAKAGE_FEATURES + [TARGET] + DROP_COLUMNS
+        )
+        # Deduplicate while preserving order
+        seen = set()
+        cols = [c for c in all_cols if not (c in seen or seen.add(c))]
+        df = pd.DataFrame(np.random.rand(10, len(cols)), columns=cols)
+        X, y = prepare_features(df)
+        for col in LEAKAGE_FEATURES:
+            assert col not in X.columns, f"Leakage feature '{col}' still in X"
+        assert TARGET not in X.columns
+        for col in DROP_COLUMNS:
+            assert col not in X.columns
+
+
+class TestPredictorValidation:
+    def test_predict_missing_feature_raises(self):
+        """Predictor should raise ValueError on missing features."""
+        from sklearn.linear_model import Ridge
+        from sklearn.preprocessing import StandardScaler
+
+        model = Ridge(alpha=1.0)
+        X_train = pd.DataFrame({"a": [1.0, 2.0, 3.0], "b": [4.0, 5.0, 6.0]})
+        y_train = np.array([10.0, 20.0, 30.0])
+        model.fit(X_train, y_train)
+
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+
+        metadata = {"model_name": "test", "feature_names": ["a", "b"]}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = save_model(model, scaler, metadata, path=tmpdir, model_name="test")
+
+            from models.predict import YieldPredictor
+            predictor = YieldPredictor(path)
+
+            X_missing = pd.DataFrame({"a": [1.0]})
+            with pytest.raises(ValueError, match="Missing features"):
+                predictor.predict(X_missing)
+
+    def test_predict_reordered_features(self):
+        """Predictor should reorder features to match training order."""
+        from sklearn.linear_model import Ridge
+        from sklearn.preprocessing import StandardScaler
+
+        model = Ridge(alpha=1.0)
+        X_train = pd.DataFrame({"a": [1.0, 2.0, 3.0], "b": [4.0, 5.0, 6.0]})
+        y_train = np.array([10.0, 20.0, 30.0])
+        model.fit(X_train, y_train)
+
+        scaler = StandardScaler()
+        scaler.fit(X_train)
+
+        metadata = {"model_name": "test", "feature_names": ["a", "b"]}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = save_model(model, scaler, metadata, path=tmpdir, model_name="test")
+
+            from models.predict import YieldPredictor
+            predictor = YieldPredictor(path)
+
+            X_reordered = pd.DataFrame({"b": [5.0], "a": [2.0]})
+            preds = predictor.predict(X_reordered)
+            assert preds.shape == (1,)
+
+
 class TestTrainer:
     @pytest.mark.skipif(SKIP_NO_DATA, reason="Dataset not available")
     def test_run_single_model(self, tmp_path):

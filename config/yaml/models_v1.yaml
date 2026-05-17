@@ -84,6 +84,8 @@ time_series:
   batch_size: 4096
   epochs: 30
   learning_rate: 0.001
+  tabular_hidden: [256, 128]
+  tabular_dropout: 0.3
 
 tuning:
   lightgbm_search_space:

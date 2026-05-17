@@ -53,8 +53,21 @@ class YieldPredictor:
 
     def predict(self, X: pd.DataFrame) -> np.ndarray:
         """Predict yield from a feature DataFrame."""
+        feature_names = self.metadata.get("feature_names")
+        if feature_names:
+            missing = set(feature_names) - set(X.columns)
+            if missing:
+                raise ValueError(f"Missing features: {sorted(missing)}")
+            X = X[feature_names]
+
         if self._format == "pytorch":
             import torch
+
+            expected_dim = self.metadata.get("input_dim")
+            if expected_dim and X.shape[1] != expected_dim:
+                raise ValueError(
+                    f"Expected {expected_dim} features, got {X.shape[1]}"
+                )
 
             X_arr = X.values.astype(np.float32)
             if self.scaler is not None:
@@ -65,7 +78,6 @@ class YieldPredictor:
                 preds = self.model(tensor).cpu().numpy().flatten()
             return preds
 
-        # LightGBM and XGBoost both have .predict(DataFrame)
         return np.asarray(self.model.predict(X))
 
     def predict_single(self, features: dict) -> float:
