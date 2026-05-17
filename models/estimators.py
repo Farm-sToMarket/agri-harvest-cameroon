@@ -10,7 +10,8 @@ from sklearn.ensemble import (
 
 from config.yaml_loader import load_models_v0
 
-_est_cfg = load_models_v0()["estimators"]
+_cfg = load_models_v0()
+_est_cfg = _cfg["estimators"]
 
 
 def _build_random_forest(random_state: int = 42) -> RandomForestRegressor:
@@ -20,7 +21,7 @@ def _build_random_forest(random_state: int = 42) -> RandomForestRegressor:
         max_depth=rf["max_depth"],
         min_samples_leaf=rf["min_samples_leaf"],
         random_state=random_state,
-        n_jobs=-1,
+        n_jobs=_cfg["n_jobs"],
     )
 
 
@@ -48,7 +49,7 @@ _MODEL_REGISTRY: dict[str, object] = {
             ("hgb", _build_hist_gradient_boosting(rs)),
         ],
         final_estimator=Ridge(alpha=_est_cfg["ridge"]["alpha"]),
-        n_jobs=-1,
+        n_jobs=_cfg["n_jobs"],
     ),
 }
 

@@ -22,8 +22,12 @@ class MetricsResult:
     n_samples: int
 
 
-def _safe_mape(y_true: np.ndarray, y_pred: np.ndarray, epsilon: float = 1e-3) -> float:
-    """MAPE guarded against near-zero actuals."""
+def _safe_mape(y_true: np.ndarray, y_pred: np.ndarray, epsilon: float = 1.0) -> float:
+    """MAPE guarded against near-zero actuals.
+
+    Uses epsilon=1.0 (1 kg/ha or 0.001 t/ha) as minimum denominator
+    to avoid division by near-zero values.
+    """
     return float(np.mean(np.abs((y_true - y_pred) / np.maximum(np.abs(y_true), epsilon))))
 
 

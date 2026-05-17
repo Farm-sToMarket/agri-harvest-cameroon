@@ -19,9 +19,6 @@ from torch.utils.data import Dataset, DataLoader
 from models.v1.config import TIMESERIES_CONFIG
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
-
-
 def _masked_mean(tensor: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
     """Mean pooling that ignores padding positions.
 
@@ -42,9 +39,6 @@ def _masked_mean(tensor: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
     mask = mask.unsqueeze(2).float()
     summed = (tensor * mask).sum(dim=1)  # (batch, hidden)
     return summed / lengths.unsqueeze(1).float().clamp(min=1)
-
-
-# ── Dataset ─────────────────────────────────────────────────────────────────
 
 
 class CropTimeSeriesDataset(Dataset):
@@ -89,9 +83,6 @@ def collate_timeseries(batch):
     return statics, seqs_padded, targets, lengths
 
 
-# ── Model ───────────────────────────────────────────────────────────────────
-
-
 class HybridYieldModel(nn.Module):
     """LSTM (weather sequences) + Dense (static features) -> yield prediction.
 
@@ -114,27 +105,27 @@ class HybridYieldModel(nn.Module):
         hidden = cfg["lstm_hidden"]
         n_layers = cfg["lstm_layers"]
 
-        # Tabular branch
+        tab_hidden = cfg.get("tabular_hidden", [256, 128])
+        tab_dropout = cfg.get("tabular_dropout", 0.3)
+
         self.tabular = nn.Sequential(
-            nn.Linear(static_dim, 256),
+            nn.Linear(static_dim, tab_hidden[0]),
             nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(256, 128),
+            nn.Dropout(tab_dropout),
+            nn.Linear(tab_hidden[0], tab_hidden[1]),
             nn.ReLU(),
         )
 
-        # LSTM branch
         self.lstm = nn.LSTM(
             input_size=weather_dim,
             hidden_size=hidden,
             num_layers=n_layers,
             batch_first=True,
-            dropout=0.3 if n_layers > 1 else 0.0,
+            dropout=tab_dropout if n_layers > 1 else 0.0,
         )
 
-        # Regression head
         self.head = nn.Sequential(
-            nn.Linear(128 + hidden, 64),
+            nn.Linear(tab_hidden[1] + hidden, 64),
             nn.ReLU(),
             nn.Linear(64, 1),
         )
@@ -155,9 +146,6 @@ class HybridYieldModel(nn.Module):
 
         combined = torch.cat([tab_out, lstm_out], dim=1)
         return self.head(combined)
-
-
-# ── Transformer model ───────────────────────────────────────────────────────
 
 
 def _sinusoidal_encoding(max_len: int, d_model: int) -> torch.Tensor:
@@ -204,40 +192,36 @@ class TransformerYieldModel(nn.Module):
         super().__init__()
         cfg = config or TIMESERIES_CONFIG
         seq_dim = seq_dim or len(cfg["weather_features"])
+        tab_hidden = cfg.get("tabular_hidden", [256, 128])
+        tab_dropout = cfg.get("tabular_dropout", 0.3)
 
-        # Tabular branch
         self.tabular = nn.Sequential(
-            nn.Linear(static_dim, 256),
+            nn.Linear(static_dim, tab_hidden[0]),
             nn.ReLU(),
-            nn.BatchNorm1d(256),
-            nn.Dropout(0.3),
-            nn.Linear(256, 128),
+            nn.BatchNorm1d(tab_hidden[0]),
+            nn.Dropout(tab_dropout),
+            nn.Linear(tab_hidden[0], tab_hidden[1]),
             nn.ReLU(),
         )
 
-        # Weather -> d_model projection
         self.input_proj = nn.Linear(seq_dim, d_model)
-
-        # Sinusoidal positional encoding (fixed, not learned)
         self.register_buffer(
             "pos_encoding", _sinusoidal_encoding(max_seq_len, d_model)
         )
 
-        # Transformer encoder
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=nhead,
             dim_feedforward=dim_feedforward,
-            dropout=0.3,
+            dropout=tab_dropout,
             activation="gelu",
             batch_first=True,
             norm_first=True,
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
 
-        # Regression head
         self.head = nn.Sequential(
-            nn.Linear(128 + d_model, 64),
+            nn.Linear(tab_hidden[1] + d_model, 64),
             nn.ReLU(),
             nn.Linear(64, 1),
         )
@@ -275,9 +259,6 @@ class TransformerYieldModel(nn.Module):
 
         combined = torch.cat([tab_out, seq_out], dim=1)
         return self.head(combined)
-
-
-# ── Training loop ───────────────────────────────────────────────────────────
 
 
 def train_hybrid_model(

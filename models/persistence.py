@@ -32,6 +32,7 @@ def save_model(
     bundle = {
         "model": model,
         "preprocessor": preprocessor,
+        "feature_names": metadata.get("feature_names", []),
     }
     joblib.dump(bundle, model_path)
 
@@ -66,5 +67,8 @@ def load_model(path: str | Path) -> tuple[object, object, dict]:
     if meta_path.exists():
         with open(meta_path) as f:
             metadata = json.load(f)
+
+    if "feature_names" not in metadata and "feature_names" in bundle:
+        metadata["feature_names"] = bundle["feature_names"]
 
     return model, preprocessor, metadata
