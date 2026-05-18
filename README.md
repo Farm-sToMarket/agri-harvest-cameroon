@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/badge/domain-agriculture-9cf" />
 </p>
 
-Yield prediction platform for Cameroon agriculture. Combines soil, weather, satellite, and crop survey data into ML pipelines that predict harvest yields across 8 agroecological zones and 28 crop types.
+Yield prediction platform for Cameroon agriculture. Combines soil, weather, satellite, and crop survey data into ML pipelines that predict harvest yields across 8 agroecological zones and 27 crop types.
 
 ## Dataset
 
@@ -20,11 +20,11 @@ The training dataset (3M rows) is hosted on Hugging Face:
 | Property | Value |
 |---|---|
 | Rows | 3,000,000 |
-| Columns | 36 (raw) / 66+ (after feature engineering) |
-| Crops | 28 types across 5 groups |
+| Columns | 36 (raw) / 66 (after feature engineering) |
+| Crops | 27 types across 7 groups |
 | Zones | 8 agroecological zones |
 | Period | 2018-2024 |
-| Sources | field measurements, weather stations, laboratory analyses |
+| Sources | field measurements, weather stations, laboratory analyses, TerraClimate, CHIRPS |
 
 ```python
 from datasets import load_dataset
@@ -35,9 +35,20 @@ df = ds.to_pandas()  # 3M rows
 
 The notebooks in `notebooks/` handle the full pipeline: data exploration (`01`), feature engineering (`02`), and data generation (`data_generation_notebook`).
 
+## Climate data collection
+
+Real climate data can be collected from TerraClimate (monthly) and CHIRPS (daily precipitation) via the CLI script:
+
+```bash
+python scripts/collect_climate.py --source terraclimate --lat 3.87 --lon 11.52 --year 2023
+python scripts/collect_climate.py --source chirps --lat 3.87 --lon 11.52 --year 2023
+```
+
+See `data/collectors/terraclimate.py` for the underlying OpenDAP/THREDDS client.
+
 ## Models
 
-Two pipeline versions target different dataset scales:
+Two pipeline versions target different dataset scales.
 
 ### v0 — scikit-learn (up to ~500K rows)
 
@@ -51,7 +62,9 @@ Spatial train/test split on `agroecological_zone` via `GroupShuffleSplit`, ensur
 | Stacking | Ensemble | RF + HGB base, Ridge meta-learner |
 | Baseline | Dummy | mean strategy (sanity check) |
 
-Evaluation: RMSE, MAE, R2, MAPE — globally and per crop group / zone. Tree-based and permutation feature importances on the best model.
+Feature validation at inference: the predictor checks that all expected features are present and reorders columns to match training order. Unknown columns in the preprocessor trigger a warning before being dropped.
+
+Evaluation: RMSE, MAE, R2, MAPE (with epsilon=1.0 kg/ha to guard near-zero yields) globally and per crop group / zone.
 
 ### v1 — LightGBM / XGBoost / PyTorch (10M+ rows)
 
@@ -62,12 +75,14 @@ Polars-based loading with dtype optimization (Float64 -> Float32, string -> Cate
 | LightGBM | GBDT (native API) | 128 leaves, lr=0.05, 2000 rounds, early stop 50 |
 | XGBoost | GBDT (hist) | depth=12, lr=0.05, 800 estimators |
 | YieldNet | PyTorch feedforward | [512, 256, 128], dropout=0.3, AdamW + cosine LR |
-| HybridYieldModel | LSTM + Dense | 2-layer LSTM (hidden=128) + tabular branch |
+| HybridYieldModel | LSTM + Dense | 2-layer LSTM (hidden=128) + configurable tabular branch |
 | TransformerYieldModel | Transformer + Dense | 4-layer encoder, 8 heads, GELU, sinusoidal PE |
 
-**Time-series models** (Hybrid, Transformer) consume per-field daily weather sequences (temperature min/max, precipitation, humidity, solar radiation) up to 180 days alongside static features. Variable-length sequences handled via masked mean pooling. Training uses cosine LR scheduling and gradient clipping.
+LightGBM receives raw data (no imputation) since it handles NaN natively. XGBoost and YieldNet receive imputed data.
 
-**Hyperparameter tuning**: Optuna with pruning callbacks for all three v1 models. Search spaces defined in `config/yaml/models_v1.yaml`.
+**Time-series models** (Hybrid, Transformer) consume per-field daily weather sequences (temperature min/max, precipitation, humidity, solar radiation) up to 180 days alongside static features. The tabular branch dimensions (`tabular_hidden`, `tabular_dropout`) are configurable in `models_v1.yaml`. Variable-length sequences handled via masked mean pooling. Training uses cosine LR scheduling and gradient clipping.
+
+**Hyperparameter tuning**: Optuna with pruning callbacks for all three v1 models. RMSE computed via `sklearn.metrics.mean_squared_error`. Search spaces defined in `config/yaml/models_v1.yaml`.
 
 ### Leakage guard
 
@@ -76,6 +91,8 @@ Both pipelines drop target-derived features before training:
 ```
 nue, wue, yield_gap_ratio, harvest_index, biomass_kg_ha
 ```
+
+Unit tests verify that these features are actually excluded from X after `prepare_features()`, not just declared in config lists.
 
 ### Feature set
 
@@ -164,30 +181,30 @@ Season classification: bimodal (south, < 6 N) with 5 seasons, monomodal (north, 
 
 ## Configuration
 
-All hardcoded values are externalized to YAML (`config/yaml/`):
+All values are externalized to YAML (`config/yaml/`):
 
 | File | Contents |
 |---|---|
 | `geography.yaml` | Cameroon bounds, elevation range, 8 zone thresholds, season definitions, validation ranges |
 | `agriculture.yaml` | 13 main crop types, soil texture classes, 5 IRAD research centers with coordinates |
-| `models_v0.yaml` | v0 feature lists (40 continuous, 22 binary, 4 ordinal), estimator hyperparameters, 80/20 split config |
-| `models_v1.yaml` | v1 LightGBM/XGBoost/YieldNet params, Optuna search spaces, time-series config, 85/15 split |
+| `models_v0.yaml` | v0 feature lists (40 continuous, 22 binary, 4 ordinal), estimator hyperparameters, n_jobs, 80/20 split |
+| `models_v1.yaml` | v1 LightGBM/XGBoost/YieldNet params, Optuna search spaces, time-series config (incl. tabular_hidden, tabular_dropout), 85/15 split |
 
 Runtime settings (API host/port, log level, secret key) are configured via `.env` and `pydantic-settings`.
 
 ## Installation
 
 ```bash
-git clone <repository-url>
-cd agri-harvest
+git clone https://github.com/farmstomarket/agri-harvest-cameroon.git
+cd agri-harvest-cameroon
 python -m venv .venv && source .venv/bin/activate
 
-pip install -e "."           
-pip install -e ".[ml]"      
-pip install -e ".[geo]"     
-pip install -e ".[dev]"      
+pip install -e "."
+pip install -e ".[ml]"
+pip install -e ".[geo]"
+pip install -e ".[dev]"
 
-cp .env.example .env         
+cp .env.example .env
 ```
 
 Requires Python 3.12+.
@@ -200,8 +217,8 @@ Requires Python 3.12+.
 from models.trainer import YieldModelTrainer
 
 trainer = YieldModelTrainer("data/features.csv")
-comparison = trainer.run()                     
-comparison = trainer.run(["random_forest"])    
+comparison = trainer.run()
+comparison = trainer.run(["random_forest"])
 ```
 
 ### v1 pipeline (10M+ rows)
@@ -210,8 +227,8 @@ comparison = trainer.run(["random_forest"])
 from models.v1.trainer import YieldModelTrainer
 
 trainer = YieldModelTrainer("data/features.parquet")
-comparison = trainer.run()                                
-comparison = trainer.run(["lightgbm"], optimize=True)     
+comparison = trainer.run()
+comparison = trainer.run(["lightgbm"], optimize=True)
 ```
 
 ### Inference
@@ -221,53 +238,42 @@ from models.predict import YieldPredictor
 
 predictor = YieldPredictor("data/models/best_model.joblib")
 yield_kg_ha = predictor.predict_single({
-    # Location
     "latitude": 3.87, "longitude": 11.52, "elevation": 650,
-    # Climate
     "temperature_min": 20.0, "temperature_max": 31.0, "temperature_mean": 25.5,
     "precipitation_daily": 15.2, "relative_humidity": 78.5, "solar_radiation": 18.5,
-    # Soil
     "ph_water": 6.2, "organic_carbon": 2.1, "total_nitrogen": 0.18,
     "available_phosphorus": 18.5, "sand_percentage": 45.0, "clay_percentage": 22.0,
-    # Management
     "fertilizer_nitrogen": 120.0, "fertilizer_phosphorus": 40.0,
     "organic_fertilizer": 5.0, "disease_incidence": 12.5,
-    # Temporal (cyclical encoding)
-    "month_sin": 0.866, "month_cos": 0.5,       # March
-    "doy_sin": 0.97, "doy_cos": -0.26,          # ~day 75
+    "month_sin": 0.866, "month_cos": 0.5,
+    "doy_sin": 0.97, "doy_cos": -0.26,
     "month": 3, "day_of_year": 75, "year": 2024, "season_ordinal": 1,
-    # Derived climate
     "gdd_base10": 15.5, "gdd_base15": 10.5, "diurnal_range": 11.0,
     "aridity_index": 0.85, "vpd_kpa": 1.2, "temp_altitude_residual": -2.3,
-    # Derived soil
     "soil_fertility_index": 0.82, "cn_ratio": 11.7, "cec_estimate": 12.5,
-    # Derived management
     "input_intensity": 0.65, "total_mineral_fert": 160.0,
     "organic_mineral_ratio": 0.03,
-    # Interactions
     "humidity_temp_interaction": 2003.0, "rain_oc_interaction": 31.9,
     "input_soil_interaction": 0.53, "water_supply_index": 0.72,
     "disease_risk_score": 0.15,
-    # Binary flags
     "irrigation_applied": 0, "heavy_rain_day": 0, "is_rainy_season": 1,
     "data_quality_flag": 0, "rainfall_regime": 1,
-    # Zone one-hots
     "zone_coastal_forest": 0, "zone_forest_savanna": 0,
     "zone_guinea_savanna": 0, "zone_highlands": 0,
     "zone_mont_cameroun_volcanic": 0, "zone_sahel_savanna": 0,
-    # Crop group one-hots
     "grp_cereals": 1, "grp_industrial_crops": 0, "grp_legumes": 0,
     "grp_root_tubers": 0, "grp_tree_crops": 0, "grp_vegetables": 0,
-    # Altitude class one-hots
     "alt_highland": 0, "alt_lowland": 0, "alt_mid_altitude": 1,
     "alt_mountain": 0, "alt_plateau": 0,
 })
 ```
 
+The predictor validates that all expected features are present and raises `ValueError` with a list of missing columns if any are absent. Columns are automatically reordered to match training order.
+
 ### Tests
 
 ```bash
-pytest tests/ -v    # 141 tests
+pytest tests/ -v    # 207 tests
 ```
 
 ## License
